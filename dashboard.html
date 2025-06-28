@@ -30,7 +30,8 @@
 
   <script>
     function fetchStudents() {
-      fetch("http://127.0.0.1:8000/students")
+      fetch("https://student-principal-communication.onrender.com/students")
+
         .then(res => res.json())
         .then(data => {
           const table = document.getElementById("studentTable");
@@ -54,7 +55,7 @@
       formData.append("name", name);
       formData.append("roll", roll);
 
-      fetch("http://127.0.0.1:8000/register", {
+      fetch("https://student-principal-communication.onrender.com/register", {
         method: "POST",
         body: formData
       })
@@ -68,19 +69,20 @@
     }
 
     function deleteStudent(roll) {
-      fetch(`http://127.0.0.1:8000/delete/${roll}`, {
-        method: "DELETE"
-      })
-      .then(res => res.json())
-      .then(data => {
-        alert(data.message || data.error);
-        fetchStudents(); // Refresh list
-      });
-    }
+  fetch(`https://student-principal-communication.onrender.com/delete/${roll}`, {
+    method: "DELETE"
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert(data.message || data.error);
+    fetchStudents(); // Refresh list
+  });
+}
+
 
     // Load students on page load
     window.onload = fetchStudents;
   </script>
 
 </body>
-</html>
+</html>     
