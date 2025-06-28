@@ -82,4 +82,4 @@ def update_student(
         return {"error": f"No student found with roll number {old_roll}."}
     @app.get("/")
     def read_root():
-    return {"message": "Welcome to Principal-Student App!"}
+        return {"message": "Welcome to Principal-Student App!"}
