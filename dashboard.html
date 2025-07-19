@@ -17,7 +17,8 @@
   <h2>📥 Register Student</h2>
   <input type="text" id="name" placeholder="Enter Name">
   <input type="text" id="roll" placeholder="Enter Roll Number">
-  <button onclick="registerStudent()">Register</button>
+  <button onclick="registerStudent()" id="registerBtn">Register</button>
+  <button onclick="updateStudent()" id="updateBtn" style="display:none;">Update</button>
   <p id="registerStatus"></p>
 
   <h2>📋 Registered Students</h2>
@@ -25,25 +26,33 @@
     <tr>
       <th>Name</th>
       <th>Roll Number</th>
+      <th>Registered At</th>
       <th>Action</th>
     </tr>
   </table>
 
   <script>
     const apiBase = "https://student-principal-communication.onrender.com";
+    const localTimeMap = {}; // store registration times locally
+    let editingRoll = null;  // track which roll number is being edited
 
     function fetchStudents() {
       fetch(`${apiBase}/students`)
         .then(res => res.json())
         .then(data => {
           const table = document.getElementById("studentTable");
-          table.innerHTML = "<tr><th>Name</th><th>Roll Number</th><th>Action</th></tr>";
+          table.innerHTML = "<tr><th>Name</th><th>Roll Number</th><th>Registered At</th><th>Action</th></tr>";
           data.forEach(student => {
+            const regTime = localTimeMap[student.roll] || "🕑 Not captured";
             const row = table.insertRow();
             row.innerHTML = `
               <td>${student.name}</td>
               <td>${student.roll}</td>
-              <td><button onclick="deleteStudent('${student.roll}')">Delete</button></td>
+              <td>${regTime}</td>
+              <td>
+                <button onclick="editStudent('${student.name}', '${student.roll}')">Edit</button>
+                <button onclick="deleteStudent('${student.roll}')">Delete</button>
+              </td>
             `;
           });
         })
@@ -72,6 +81,11 @@
       .then(res => res.json())
       .then(data => {
         document.getElementById("registerStatus").innerText = data.message || data.error;
+
+        // ✅ Save registration time
+        const timeNow = new Date().toLocaleString();
+        localTimeMap[roll] = timeNow;
+
         fetchStudents(); // Refresh list
         document.getElementById("name").value = "";
         document.getElementById("roll").value = "";
@@ -90,17 +104,63 @@
       .then(res => res.json())
       .then(data => {
         alert(data.message || data.error);
-        fetchStudents(); // Refresh list
+        delete localTimeMap[roll];
+        fetchStudents();
       })
       .catch(() => {
         alert("❌ Failed to delete student.");
       });
     }
 
-    // Load students on page load
+    function editStudent(name, roll) {
+      document.getElementById("name").value = name;
+      document.getElementById("roll").value = roll;
+      document.getElementById("roll").disabled = true;
+
+      editingRoll = roll;
+
+      document.getElementById("registerBtn").style.display = "none";
+      document.getElementById("updateBtn").style.display = "inline-block";
+    }
+
+    function updateStudent() {
+      const name = document.getElementById("name").value.trim();
+      const roll = document.getElementById("roll").value.trim();
+
+      if (!name || !roll) {
+        document.getElementById("registerStatus").innerText = "⚠️ Please enter both name and roll number.";
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("roll", roll);
+
+      fetch(`${apiBase}/update`, {  // This assumes your backend supports /update route
+        method: "PUT",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("registerStatus").innerText = data.message || data.error;
+
+        fetchStudents();
+        document.getElementById("name").value = "";
+        document.getElementById("roll").value = "";
+        document.getElementById("roll").disabled = false;
+
+        document.getElementById("registerBtn").style.display = "inline-block";
+        document.getElementById("updateBtn").style.display = "none";
+
+        editingRoll = null;
+      })
+      .catch(() => {
+        document.getElementById("registerStatus").innerText = "❌ Failed to update student.";
+      });
+    }
+
     window.onload = fetchStudents;
   </script>
 
 </body>
 </html>
-
