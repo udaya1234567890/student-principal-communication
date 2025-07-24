@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Principal Admin Dashboard - Login & Access</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h2, h3 { color: #2c3e50; }
+        .login, .dashboard { margin-top: 20px; }
+        .hidden { display: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background-color: #f4f4f4; }
+        button { padding: 5px 10px; background-color: #e74c3c; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #c0392b; }
+    </style>
+</head>
+<body>
+    <h2>Principal Login</h2>
+    <div class="login">
+        <label>Username: <input type="text" id="username"></label><br><br>
+        <label>Password: <input type="password" id="password"></label><br><br>
+        <button onclick="login()">Login</button>
+        <p id="loginError" style="color:red;"></p>
+    </div>
+
+    <div class="dashboard hidden">
+        <h3>Registered Students</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Roll Number</th>
+                    <th>Registered At</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="studentTable"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const validAdmin = { username: "admin", password: "1234" };
+
+        function login() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+
+            if (user === validAdmin.username && pass === validAdmin.password) {
+                document.querySelector(".login").classList.add("hidden");
+                document.querySelector(".dashboard").classList.remove("hidden");
+                loadStudents();
+            } else {
+                document.getElementById("loginError").innerText = "Invalid credentials";
+            }
+        }
+
+        function loadStudents() {
+            fetch("/students")
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById("studentTable");
+                    table.innerHTML = "";
+                    data.forEach(student => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${student.name}</td>
+                            <td>${student.roll}</td>
+                            <td>${student.registered_at}</td>
+                            <td><button onclick="deleteStudent('${student.roll}')">Delete</button></td>
+                        `;
+                        table.appendChild(row);
+                    });
+                });
+        }
+
+        function deleteStudent(roll) {
+            fetch(`/delete/${roll}`, {
+                method: "DELETE"
+            })
+            .then(response => response.json())
+            .then(result => {
+                alert(result.message || result.error);
+                loadStudents();
+            });
+        }
+    </script>
+</body>
+</html>
