@@ -1,11 +1,13 @@
 from fastapi import FastAPI, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from datetime import datetime
 import json
 import os
 
 app = FastAPI()
 
+# CORS setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,18 +15,22 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+# JSON file to store student data
 FILE_NAME = "students.json"
 
+# Load existing data or initialize empty list
 if os.path.exists(FILE_NAME):
     with open(FILE_NAME, "r") as f:
         students = json.load(f)
 else:
     students = []
 
+# Home route
 @app.get("/")
 def home():
-    return {"message": "Welcome to Principal-Student App!"}
+    return {"message": "Welcome to Principal-Student Communication App!"}
 
+# Register student
 @app.post("/register")
 def register(name: str = Form(...), roll: str = Form(...)):
     for student in students:
@@ -49,10 +55,12 @@ def register(name: str = Form(...), roll: str = Form(...)):
         "student": student
     }
 
+# Get all students
 @app.get("/students")
 def get_students():
     return students
 
+# Delete student by roll number
 @app.delete("/delete/{roll}")
 def delete_student(roll: str):
     global students
@@ -66,6 +74,7 @@ def delete_student(roll: str):
     else:
         return {"error": f"No student found with roll number {roll}."}
 
+# Update student info
 @app.put("/update")
 def update_student(
     old_roll: str = Form(...),
@@ -87,3 +96,9 @@ def update_student(
         return {"message": f"Student with roll {old_roll} updated successfully."}
     else:
         return {"error": f"No student found with roll number {old_roll}."}
+
+# Serve principal dashboard
+@app.get("/admin", response_class=HTMLResponse)
+def admin_dashboard():
+    with open("admin_dashboard.html", "r") as f:
+        return f.read()
