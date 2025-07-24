@@ -17,13 +17,21 @@ app.add_middleware(
 
 # JSON file to store student data
 FILE_NAME = "students.json"
+PRINCIPAL_FILE = "principal.json"
 
-# Load existing data or initialize empty list
+# Load existing student data
 if os.path.exists(FILE_NAME):
     with open(FILE_NAME, "r") as f:
         students = json.load(f)
 else:
     students = []
+
+# Load existing principal data
+if os.path.exists(PRINCIPAL_FILE):
+    with open(PRINCIPAL_FILE, "r") as f:
+        principals = json.load(f)
+else:
+    principals = []
 
 # Home route
 @app.get("/")
@@ -102,3 +110,27 @@ def update_student(
 def admin_dashboard():
     with open("admin_dashboard.html", "r") as f:
         return f.read()
+
+# Register principal
+@app.post("/register_principal")
+def register_principal(username: str = Form(...), email: str = Form(...), password: str = Form(...)):
+    for admin in principals:
+        if admin["username"] == username:
+            return {"error": "Username already exists."}
+
+    principals.append({
+        "username": username,
+        "email": email,
+        "password": password
+    })
+    with open(PRINCIPAL_FILE, "w") as f:
+        json.dump(principals, f, indent=4)
+    return {"message": "Principal registered successfully!"}
+
+# Login principal
+@app.post("/login_principal")
+def login_principal(username: str = Form(...), password: str = Form(...)):
+    for admin in principals:
+        if admin["username"] == username and admin["password"] == password:
+            return {"success": True, "message": "Login successful!"}
+    return {"success": False, "error": "Invalid username or password."}
