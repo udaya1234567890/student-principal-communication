@@ -1,25 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Principal Admin Dashboard - Login & Access</title>
+    <title>Principal Registration and Dashboard</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h2, h3 { color: #2c3e50; }
-        .login, .dashboard { margin-top: 20px; }
+        .section { margin-top: 20px; }
         .hidden { display: none; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
         th { background-color: #f4f4f4; }
-        button { padding: 5px 10px; background-color: #e74c3c; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #c0392b; }
+        button { padding: 5px 10px; background-color: #3498db; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #2980b9; }
     </style>
 </head>
 <body>
+    <h2>Principal Registration</h2>
+    <div class="section" id="registerSection">
+        <label>Username: <input type="text" id="regUsername"></label><br><br>
+        <label>Email: <input type="email" id="regEmail"></label><br><br>
+        <label>Password: <input type="password" id="regPassword"></label><br><br>
+        <button onclick="registerPrincipal()">Register</button>
+        <p id="registerMessage" style="color:green;"></p>
+    </div>
+
     <h2>Principal Login</h2>
-    <div class="login">
-        <label>Username: <input type="text" id="username"></label><br><br>
-        <label>Password: <input type="password" id="password"></label><br><br>
-        <button onclick="login()">Login</button>
+    <div class="section" id="loginSection">
+        <label>Username: <input type="text" id="loginUsername"></label><br><br>
+        <label>Password: <input type="password" id="loginPassword"></label><br><br>
+        <button onclick="loginPrincipal()">Login</button>
         <p id="loginError" style="color:red;"></p>
     </div>
 
@@ -39,19 +48,42 @@
     </div>
 
     <script>
-        const validAdmin = { username: "admin", password: "1234" };
+        function registerPrincipal() {
+            const username = document.getElementById("regUsername").value;
+            const email = document.getElementById("regEmail").value;
+            const password = document.getElementById("regPassword").value;
 
-        function login() {
-            const user = document.getElementById("username").value;
-            const pass = document.getElementById("password").value;
+            fetch("/register_principal", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `username=${username}&email=${email}&password=${password}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("registerMessage").innerText = data.message || data.error;
+            });
+        }
 
-            if (user === validAdmin.username && pass === validAdmin.password) {
-                document.querySelector(".login").classList.add("hidden");
-                document.querySelector(".dashboard").classList.remove("hidden");
-                loadStudents();
-            } else {
-                document.getElementById("loginError").innerText = "Invalid credentials";
-            }
+        function loginPrincipal() {
+            const username = document.getElementById("loginUsername").value;
+            const password = document.getElementById("loginPassword").value;
+
+            fetch("/login_principal", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `username=${username}&password=${password}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById("loginSection").classList.add("hidden");
+                    document.getElementById("registerSection").classList.add("hidden");
+                    document.querySelector(".dashboard").classList.remove("hidden");
+                    loadStudents();
+                } else {
+                    document.getElementById("loginError").innerText = data.error;
+                }
+            });
         }
 
         function loadStudents() {
