@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Leave Requests</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>Leave Requests Status</h1>
+
+    <form id="viewForm" onsubmit="return viewRequests(event)">
+        <label for="role">Role:
+            <select name="role" id="role" required>
+                <option value="">--Select Role--</option>
+                <option value="student">Student</option>
+                <option value="principal">Principal</option>
+            </select>
+        </label><br><br>
+
+        <div id="studentFields" style="display:none;">
+            Roll Number: <input type="text" name="roll" id="roll" /><br><br>
+        </div>
+
+        <div id="principalFields" style="display:none;">
+            Username: <input type="text" name="username" id="username" /><br><br>
+            Password: <input type="password" name="password" id="password" /><br><br>
+        </div>
+
+        <button type="submit">View Requests</button>
+    </form>
+
+    <table id="resultsTable" style="display:none;">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Roll</th>
+                <th>Reason</th>
+                <th>Start Date</th>
+                <th>Return Date</th>
+                <th>Total Days</th>
+                <th>Timestamp</th>
+                <th>Status</th>
+                <th>Response</th>
+            </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+    </table>
+
+    <script>
+        const roleSelect = document.getElementById("role");
+
+        roleSelect.addEventListener("change", function () {
+            const studentFields = document.getElementById("studentFields");
+            const principalFields = document.getElementById("principalFields");
+
+            if (roleSelect.value === "student") {
+                studentFields.style.display = "block";
+                principalFields.style.display = "none";
+            } else if (roleSelect.value === "principal") {
+                studentFields.style.display = "none";
+                principalFields.style.display = "block";
+            } else {
+                studentFields.style.display = "none";
+                principalFields.style.display = "none";
+            }
+        });
+
+        async function viewRequests(event) {
+            event.preventDefault();
+
+            const role = document.getElementById("role").value.trim();
+            const formData = new FormData();
+            formData.append("role", role);
+
+            if (role === "student") {
+                const roll = document.getElementById("roll").value.trim();
+                if (!roll) {
+                    alert("Please enter your roll number.");
+                    return false;
+                }
+                formData.append("roll", roll);
+            } else if (role === "principal") {
+                const username = document.getElementById("username").value.trim();
+                const password = document.getElementById("password").value.trim();
+                if (!username || !password) {
+                    alert("Please enter both username and password.");
+                    return false;
+                }
+                formData.append("username", username);
+                formData.append("password", password);
+            }
+
+            try {
+                const response = await fetch("/view_requests", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                const table = document.getElementById("resultsTable");
+                const tbody = document.getElementById("resultsBody");
+                tbody.innerHTML = "";
+
+                if (Array.isArray(data)) {
+                    if (data.length === 0) {
+                        alert("No leave requests found.");
+                        table.style.display = "none";
+                        return;
+                    }
+
+                    data.forEach(req => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${req.id ?? "-"}</td>
+                            <td>${req.name ?? "-"}</td>
+                            <td>${req.roll ?? "-"}</td>
+                            <td>${req.reason ?? "-"}</td>
+                            <td>${req.start_date ?? "-"}</td>
+                            <td>${req.return_date ?? "-"}</td>
+                            <td>${req.total_days ?? "-"}</td>
+                            <td>${req.timestamp ?? "-"}</td>
+                            <td>${req.status ?? "Pending"}</td>
+                            <td>${req.response || "No response yet"}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                    table.style.display = "table";
+                } else {
+                    alert(data.error || "Something went wrong.");
+                    table.style.display = "none";
+                }
+            } catch (error) {
+                alert("Error fetching data: " + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
