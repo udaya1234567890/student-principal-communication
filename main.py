@@ -15,122 +15,176 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# JSON file to store student data
-FILE_NAME = "students.json"
-PRINCIPAL_FILE = "principal.json"
+# File paths
+STUDENT_FILE = "students.json"
+PRINCIPAL_FILE = "principals.json"
+REQUEST_FILE = "requests.json"
 
-# Load existing student data
-if os.path.exists(FILE_NAME):
-    with open(FILE_NAME, "r") as f:
-        students = json.load(f)
-else:
-    students = []
+# Helper functions
+def load_data(path):
+    if os.path.exists(path):
+        with open(path, "r") as f:
+            return json.load(f)
+    return []
 
-# Load existing principal data
-if os.path.exists(PRINCIPAL_FILE):
-    with open(PRINCIPAL_FILE, "r") as f:
-        principals = json.load(f)
-else:
-    principals = []
+def save_data(path, data):
+    with open(path, "w") as f:
+        json.dump(data, f, indent=4)
 
-# Home route
-@app.get("/")
-def home():
-    return {"message": "Welcome to Principal-Student Communication App!"}
+def get_new_request_id(requests):
+    if not requests:
+        return 1
+    return max([req["id"] for req in requests], default=0) + 1
 
 # Register student
-@app.post("/register")
-def register(name: str = Form(...), roll: str = Form(...)):
-    for student in students:
-        if student["roll"] == roll:
-            return {"error": f"Student with roll number {roll} already exists."}
-
-    registration_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    student = {
+@app.post("/register_student")
+def register_student(name: str = Form(...), roll: str = Form(...)):
+    students = load_data(STUDENT_FILE)
+    if any(s["roll"] == roll for s in students):
+        return {"error": "Student already registered"}
+    students.append({
         "name": name,
         "roll": roll,
-        "registered_at": registration_time
-    }
+        "registered_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+    save_data(STUDENT_FILE, students)
+    return {"message": "Student registered successfully"}
 
-    students.append(student)
-
-    with open(FILE_NAME, "w") as f:
-        json.dump(students, f, indent=4)
-
-    return {
-        "message": f"{name} registered successfully!",
-        "total": len(students),
-        "student": student
-    }
-
-# Get all students
 @app.get("/students")
 def get_students():
-    return students
+    return load_data(STUDENT_FILE)
 
-# Delete student by roll number
-@app.delete("/delete/{roll}")
+@app.delete("/delete_student/{roll}")
 def delete_student(roll: str):
-    global students
-    original_count = len(students)
-    students = [s for s in students if s["roll"] != roll]
-
-    if len(students) < original_count:
-        with open(FILE_NAME, "w") as f:
-            json.dump(students, f, indent=4)
-        return {"message": f"Student with roll number {roll} deleted successfully."}
-    else:
-        return {"error": f"No student found with roll number {roll}."}
-
-# Update student info
-@app.put("/update")
-def update_student(
-    old_roll: str = Form(...),
-    new_name: str = Form(...),
-    new_roll: str = Form(...)
-):
-    found = False
-
-    for student in students:
-        if student["roll"] == old_roll:
-            student["name"] = new_name
-            student["roll"] = new_roll
-            found = True
-            break
-
-    if found:
-        with open(FILE_NAME, "w") as f:
-            json.dump(students, f, indent=4)
-        return {"message": f"Student with roll {old_roll} updated successfully."}
-    else:
-        return {"error": f"No student found with roll number {old_roll}."}
-
-# Serve principal dashboard
-@app.get("/admin", response_class=HTMLResponse)
-def admin_dashboard():
-    with open("admin_dashboard.html", "r") as f:
-        return f.read()
+    students = load_data(STUDENT_FILE)
+    updated_students = [s for s in students if s["roll"] != roll]
+    save_data(STUDENT_FILE, updated_students)
+    return {"message": f"Student with roll {roll} deleted"}
 
 # Register principal
 @app.post("/register_principal")
 def register_principal(username: str = Form(...), email: str = Form(...), password: str = Form(...)):
-    for admin in principals:
-        if admin["username"] == username:
-            return {"error": "Username already exists."}
-
+    principals = load_data(PRINCIPAL_FILE)
+    if any(p["username"] == username for p in principals):
+        return {"error": "Principal already registered"}
     principals.append({
         "username": username,
         "email": email,
         "password": password
     })
-    with open(PRINCIPAL_FILE, "w") as f:
-        json.dump(principals, f, indent=4)
-    return {"message": "Principal registered successfully!"}
+    save_data(PRINCIPAL_FILE, principals)
+    return {"message": "Principal registered successfully"}
 
-# Login principal
 @app.post("/login_principal")
 def login_principal(username: str = Form(...), password: str = Form(...)):
-    for admin in principals:
-        if admin["username"] == username and admin["password"] == password:
-            return {"success": True, "message": "Login successful!"}
-    return {"success": False, "error": "Invalid username or password."}
+    principals = load_data(PRINCIPAL_FILE)
+    for p in principals:
+        if p["username"] == username and p["password"] == password:
+            return {"success": True}
+    return {"success": False, "message": "Invalid credentials"}
+
+# Request permission
+@app.post("/request_permission")
+def request_permission(
+    name: str = Form(...),
+    roll: str = Form(...),
+    reason: str = Form(...),
+    start_date: str = Form(...),
+    return_date: str = Form(...),
+    total_days: str = Form(...)
+):
+    students = load_data(STUDENT_FILE)
+    if not any(s["roll"] == roll for s in students):
+        return {"error": "Student not registered"}
+
+    requests = load_data(REQUEST_FILE)
+    new_id = get_new_request_id(requests)
+
+    requests.append({
+        "id": new_id,
+        "name": name,
+        "roll": roll,
+        "reason": reason,
+        "start_date": start_date,
+        "return_date": return_date,
+        "total_days": total_days,
+        "status": "Pending",
+        "response": "",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+    save_data(REQUEST_FILE, requests)
+    return {"message": "Leave request submitted"}
+
+# Update leave request status
+@app.post("/update_status")
+def update_status(
+    request_id: int = Form(...),
+    status: str = Form(...),           # Approved / Rejected / Paused
+    response: str = Form(""),
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    principals = load_data(PRINCIPAL_FILE)
+    is_valid = any(p["username"] == username and p["password"] == password for p in principals)
+
+    if not is_valid:
+        return {"error": "Unauthorized principal"}
+
+    requests = load_data(REQUEST_FILE)
+    found = False
+
+    for req in requests:
+        if req["id"] == request_id:
+            req["status"] = status
+            req["response"] = response
+            found = True
+            break
+
+    if not found:
+        return {"error": "Request ID not found"}
+
+    save_data(REQUEST_FILE, requests)
+    return {"message": "Request status updated successfully"}
+
+# View requests
+@app.post("/view_requests")
+def view_requests(role: str = Form(...), username: str = Form(None), password: str = Form(None), roll: str = Form(None)):
+    requests = load_data(REQUEST_FILE)
+
+    if role == "principal":
+        principals = load_data(PRINCIPAL_FILE)
+        is_valid = any(p["username"] == username and p["password"] == password for p in principals)
+        if is_valid:
+            return requests
+        return {"error": "Unauthorized"}
+
+    elif role == "student":
+        if not roll:
+            return {"error": "Roll number required"}
+        return [r for r in requests if r["roll"] == roll]
+
+    return {"error": "Invalid role"}
+
+# Serve HTML pages
+def serve_html(filename: str):
+    try:
+        with open(filename, "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read(), status_code=200)
+    except FileNotFoundError:
+        return HTMLResponse(content=f"{filename} not found", status_code=404)
+
+@app.get("/request", response_class=HTMLResponse)
+def request_page():
+    return serve_html("request.html")
+
+@app.get("/admin_dashboard", response_class=HTMLResponse)
+def admin_page():
+    return serve_html("admin_dashboard.html")
+
+@app.get("/view_requests_page", response_class=HTMLResponse)
+def view_page():
+    return serve_html("view_requests.html")
+
+@app.get("/")
+def root():
+    return {"message": "Principal-Student Communication App is running"}
