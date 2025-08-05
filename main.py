@@ -201,7 +201,7 @@ def serve_html(file: str):
 
 @app.get("/")
 def root():
-    return {"message": "Principal-Student Communication App is running"}
+    return {"message": "Welcome To Principal-Student Communication App "}
 
 @app.get("/request", response_class=HTMLResponse)
 def request_page():
@@ -222,3 +222,7 @@ def event_request_page():
 @app.get("/view_event_status", response_class=HTMLResponse)
 def view_event_status_page():
     return serve_html("view_event_status.html")
+
+@app.get("/register_student_page", response_class=HTMLResponse)
+def register_student_page():
+    return serve_html("register_student.html")
