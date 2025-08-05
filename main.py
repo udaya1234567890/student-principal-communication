@@ -20,6 +20,7 @@ STUDENT_FILE = "students.json"
 PRINCIPAL_FILE = "principals.json"
 REQUEST_FILE = "requests.json"
 EVENT_FILE = "events.json"
+EMERGENCY_FILE = "emergencies.json"
 
 # Utility Functions
 def load_data(file):
@@ -172,11 +173,8 @@ def update_event_status(id: int = Form(...), title: str = Form(...), date: str =
     events = load_data(EVENT_FILE)
     for e in events:
         if e["id"] == id:
-            e["title"] = title
-            e["date"] = date
-            e["location"] = location
-            e["description"] = description
-            e["status"] = status
+            e.update({"title": title, "date": date, "location": location,
+                      "description": description, "status": status})
             save_data(EVENT_FILE, events)
             return {"message": "Event updated"}
     return {"error": "Event not found"}
@@ -189,6 +187,51 @@ def delete_event(id: int, username: str, password: str):
     updated = [e for e in events if e["id"] != id]
     save_data(EVENT_FILE, updated)
     return {"message": "Event deleted"}
+
+# ---------------- Emergency Requests ----------------
+
+@app.post("/submit_emergency")
+def submit_emergency(name: str = Form(...), roll: str = Form(...), emergency_type: str = Form(...), description: str = Form(...)):
+    if not any(s["roll"] == roll for s in load_data(STUDENT_FILE)):
+        return {"error": "Student not registered"}
+    emergencies = load_data(EMERGENCY_FILE)
+    new_id = get_new_id(emergencies)
+    emergencies.append({
+        "id": new_id,
+        "name": name,
+        "roll": roll,
+        "emergency_type": emergency_type,
+        "description": description,
+        "status": "Pending",
+        "response": "",
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+    save_data(EMERGENCY_FILE, emergencies)
+    return {"message": "Emergency request submitted"}
+
+@app.get("/get_emergencies")
+def get_emergencies(username: str, password: str):
+    if not any(p["username"] == username and p["password"] == password for p in load_data(PRINCIPAL_FILE)):
+        return {"error": "Unauthorized"}
+    return load_data(EMERGENCY_FILE)
+
+@app.post("/update_emergency_status")
+def update_emergency_status(id: int = Form(...), status: str = Form(...), response: str = Form(""),
+                             username: str = Form(...), password: str = Form(...)):
+    if not any(p["username"] == username and p["password"] == password for p in load_data(PRINCIPAL_FILE)):
+        return {"error": "Unauthorized"}
+    emergencies = load_data(EMERGENCY_FILE)
+    for e in emergencies:
+        if e["id"] == id:
+            e["status"] = status
+            e["response"] = response
+            save_data(EMERGENCY_FILE, emergencies)
+            return {"message": "Emergency request updated"}
+    return {"error": "Emergency request not found"}
+
+@app.post("/view_emergency_by_roll")
+def view_emergency_by_roll(roll: str = Form(...)):
+    return [e for e in load_data(EMERGENCY_FILE) if e["roll"] == roll]
 
 # ---------------- Serve HTML Pages ----------------
 
@@ -226,3 +269,11 @@ def view_event_status_page():
 @app.get("/register_student_page", response_class=HTMLResponse)
 def register_student_page():
     return serve_html("register_student.html")
+
+@app.get("/emergency_request", response_class=HTMLResponse)
+def emergency_request_page():
+    return serve_html("emergency_request.html")
+
+@app.get("/view_emergency_status", response_class=HTMLResponse)
+def view_emergency_status_page():
+    return serve_html("view_emergency_status.html")
