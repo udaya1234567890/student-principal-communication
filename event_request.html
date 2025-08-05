@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Event Request - Student</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 30px; }
+        h2 { color: #333; }
+        form, .status { background: #fff; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
+        input, textarea, button { display: block; width: 100%; margin-top: 10px; padding: 10px; }
+        button { background: #007BFF; color: #fff; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h2>Event Request Form</h2>
+    <form id="eventForm">
+        <label>Student Name: <input type="text" id="name" required></label>
+        <label>Roll Number: <input type="text" id="roll" required></label>
+        <label>Event Title: <input type="text" id="title" required></label>
+        <label>Event Date: <input type="date" id="date" required></label>
+        <label>Location: <input type="text" id="location" required></label>
+        <label>Description: <textarea id="description" rows="4" required></textarea></label>
+        <button type="submit">Submit Event Request</button>
+        <p id="message" style="color: green;"></p>
+    </form>
+
+    <h2>Check Your Event Requests</h2>
+    <form onsubmit="event.preventDefault(); fetchEvents();">
+        <label>Enter Roll Number: <input type="text" id="searchRoll" required></label>
+        <button type="submit">View My Events</button>
+    </form>
+
+    <div class="status" id="eventStatus"></div>
+
+    <script>
+        const BASE_URL = "http://127.0.0.1:8000";
+
+        document.getElementById("eventForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const name = document.getElementById("name").value;
+            const roll = document.getElementById("roll").value;
+            const title = document.getElementById("title").value;
+            const date = document.getElementById("date").value;
+            const location = document.getElementById("location").value;
+            const description = document.getElementById("description").value;
+
+            const body = `name=${encodeURIComponent(name)}&roll=${encodeURIComponent(roll)}&title=${encodeURIComponent(title)}&date=${encodeURIComponent(date)}&location=${encodeURIComponent(location)}&description=${encodeURIComponent(description)}`;
+
+            fetch(`${BASE_URL}/submit_event`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: body
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("message").textContent = data.message || data.error;
+                document.getElementById("eventForm").reset();
+            })
+            .catch(err => alert("Submission failed: " + err.message));
+        });
+
+        function fetchEvents() {
+            const roll = document.getElementById("searchRoll").value;
+
+            fetch(`${BASE_URL}/view_events_by_roll`, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `roll=${encodeURIComponent(roll)}`
+            })
+            .then(res => res.json())
+            .then(events => {
+                let html = `<h3>Your Event Requests:</h3>`;
+                if (!Array.isArray(events) || events.length === 0) {
+                    html += "<p>No event requests found.</p>";
+                } else {
+                    html += `<ul>`;
+                    events.forEach(event => {
+                        html += `<li><strong>${event.title}</strong> (${event.date}) at ${event.location}<br>
+                            Status: <strong>${event.status}</strong><br>
+                            Response: ${event.response || "No response yet"}<br><br>
+                        </li>`;
+                    });
+                    html += `</ul>`;
+                }
+                document.getElementById("eventStatus").innerHTML = html;
+            })
+            .catch(err => {
+                document.getElementById("eventStatus").innerText = "Error fetching events: " + err.message;
+            });
+        }
+    </script>
+</body>
+</html>
