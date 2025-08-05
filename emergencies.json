@@ -1,0 +1,32 @@
+[
+    {
+        "id": 1,
+        "name": "hari",
+        "roll": "219",
+        "emergency_type": "Medical",
+        "description": "suddenly heavy headach",
+        "status": "Approved",
+        "response": "ok",
+        "timestamp": "2025-08-05 20:56:42"
+    },
+    {
+        "id": 2,
+        "name": "suma",
+        "roll": "214",
+        "emergency_type": "injury",
+        "description": "i want leave",
+        "status": "Rejected",
+        "response": "no",
+        "timestamp": "2025-08-05 21:16:34"
+    },
+    {
+        "id": 3,
+        "name": "hari",
+        "roll": "219",
+        "emergency_type": "Other",
+        "description": "heavy bleeding",
+        "status": "Pending",
+        "response": "",
+        "timestamp": "2025-08-05 21:30:17"
+    }
+]

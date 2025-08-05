@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Emergency Request Status</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 20px; }
+        h2 { color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ccc; background: #fff; }
+        input, button { padding: 10px; margin: 10px 0; width: 100%; }
+    </style>
+</head>
+<body>
+    <h2>View Emergency Request Status</h2>
+
+    <input type="text" id="roll" placeholder="Enter your roll number">
+    <button onclick="viewStatus()">View Status</button>
+
+    <div id="statusTable"></div>
+
+    <script>
+        function viewStatus() {
+            const roll = document.getElementById("roll").value;
+            if (!roll) {
+                alert("Please enter your roll number.");
+                return;
+            }
+
+            fetch("http://127.0.0.1:8000/view_emergency_by_roll", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `roll=${roll}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!Array.isArray(data)) {
+                    document.getElementById("statusTable").innerHTML = "<p>No requests found or error occurred.</p>";
+                    return;
+                }
+
+                let html = `<table><thead><tr>
+                    <th>ID</th><th>Type</th><th>Description</th><th>Status</th><th>Response</th><th>Submitted At</th>
+                </tr></thead><tbody>`;
+
+                data.forEach(req => {
+                    html += `<tr>
+                        <td>${req.id}</td>
+                        <td>${req.emergency_type}</td>
+                        <td>${req.description}</td>
+                        <td>${req.status}</td>
+                        <td>${req.response || ""}</td>
+                        <td>${req.timestamp}</td>
+                    </tr>`;
+                });
+
+                html += "</tbody></table>";
+                document.getElementById("statusTable").innerHTML = html;
+            });
+        }
+    </script>
+</body>
+</html>
