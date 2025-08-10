@@ -1,13 +1,14 @@
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from datetime import datetime
 import json
 import os
+import hashlib
 
-app = FastAPI()
+app = FastAPI(title="Principal-Student Communication App")
 
-# Enable CORS
+# ---------------- CORS ----------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,59 +16,89 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# File paths
-STUDENT_FILE = "students.json"
-PRINCIPAL_FILE = "principals.json"
-REQUEST_FILE = "requests.json"
-EVENT_FILE = "events.json"
-EMERGENCY_FILE = "emergencies.json"
+# ---------------- File Paths ----------------
+DATA_DIR = "data"
+STUDENT_FILE = os.path.join(DATA_DIR, "students.json")
+PRINCIPAL_FILE = os.path.join(DATA_DIR, "principals.json")
+REQUEST_FILE = os.path.join(DATA_DIR, "requests.json")
+EVENT_FILE = os.path.join(DATA_DIR, "events.json")
+EMERGENCY_FILE = os.path.join(DATA_DIR, "emergencies.json")
 
-# Utility Functions
-def load_data(file):
-    if os.path.exists(file):
+os.makedirs(DATA_DIR, exist_ok=True)
+
+# ---------------- Utility Functions ----------------
+def load_data(file_path):
+    if os.path.exists(file_path):
         try:
-            with open(file, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 return json.load(f)
         except json.JSONDecodeError:
             return []
     return []
 
-def save_data(file, data):
-    with open(file, "w", encoding="utf-8") as f:
+def save_data(file_path, data):
+    with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
 
 def get_new_id(data):
-    return max([d.get("id", 0) for d in data], default=0) + 1
+    return max((item.get("id", 0) for item in data), default=0) + 1
+
+def hash_password(password: str):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_principal(username: str, password: str):
+    hashed = hash_password(password)
+    return any(
+        p["username"] == username and p["password"] == hashed
+        for p in load_data(PRINCIPAL_FILE)
+    )
+
+def get_student_by_roll(roll: str):
+    students = load_data(STUDENT_FILE)
+    for s in students:
+        if s["roll"] == roll:
+            return s
+    return None
 
 # ---------------- Student & Principal ----------------
-
 @app.post("/register_student")
-def register_student(name: str = Form(...), roll: str = Form(...)):
+def register_student(
+    name: str = Form(...),
+    roll: str = Form(...),
+    branch: str = Form(...),
+    year: str = Form(...)
+):
     students = load_data(STUDENT_FILE)
     if any(s["roll"] == roll for s in students):
-        return {"error": "Student already registered"}
+        raise HTTPException(status_code=400, detail="Student already registered")
     students.append({
         "name": name,
         "roll": roll,
+        "branch": branch,
+        "year": year,
         "registered_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
     save_data(STUDENT_FILE, students)
-    return {"message": "Student registered"}
+    return {"message": "Student registered successfully"}
 
 @app.post("/register_principal")
 def register_principal(username: str = Form(...), email: str = Form(...), password: str = Form(...)):
     principals = load_data(PRINCIPAL_FILE)
     if any(p["username"] == username for p in principals):
-        return {"error": "Principal already registered"}
-    principals.append({"username": username, "email": email, "password": password})
+        raise HTTPException(status_code=400, detail="Principal already registered")
+    principals.append({
+        "username": username,
+        "email": email,
+        "password": hash_password(password)
+    })
     save_data(PRINCIPAL_FILE, principals)
-    return {"message": "Principal registered"}
+    return {"message": "Principal registered successfully"}
 
 @app.post("/login_principal")
 def login_principal(username: str = Form(...), password: str = Form(...)):
-    if any(p["username"] == username and p["password"] == password for p in load_data(PRINCIPAL_FILE)):
+    if verify_principal(username, password):
         return {"success": True}
-    return {"success": False, "message": "Invalid credentials"}
+    raise HTTPException(status_code=401, detail="Invalid credentials")
 
 @app.get("/students")
 def get_students():
@@ -78,21 +109,24 @@ def delete_student(roll: str):
     students = load_data(STUDENT_FILE)
     updated = [s for s in students if s["roll"] != roll]
     save_data(STUDENT_FILE, updated)
-    return {"message": "Student deleted"}
+    return {"message": "Student deleted successfully"}
 
 # ---------------- Leave Requests ----------------
-
 @app.post("/request_permission")
-def request_permission(name: str = Form(...), roll: str = Form(...), reason: str = Form(...),
-                       start_date: str = Form(...), return_date: str = Form(...), total_days: str = Form(...)):
-    if not any(s["roll"] == roll for s in load_data(STUDENT_FILE)):
-        return {"error": "Student not registered"}
+def request_permission(
+    roll: str = Form(...), reason: str = Form(...),
+    start_date: str = Form(...), return_date: str = Form(...), total_days: str = Form(...)
+):
+    student = get_student_by_roll(roll)
+    if not student:
+        raise HTTPException(status_code=400, detail="Student not registered")
     requests = load_data(REQUEST_FILE)
-    new_id = get_new_id(requests)
     requests.append({
-        "id": new_id,
-        "name": name,
+        "id": get_new_id(requests),
+        "name": student["name"],
         "roll": roll,
+        "branch": student["branch"],
+        "year": student["year"],
         "reason": reason,
         "start_date": start_date,
         "return_date": return_date,
@@ -105,48 +139,55 @@ def request_permission(name: str = Form(...), roll: str = Form(...), reason: str
     return {"message": "Leave request submitted"}
 
 @app.post("/update_status")
-def update_status(request_id: int = Form(...), status: str = Form(...), response: str = Form(""),
-                  username: str = Form(...), password: str = Form(...)):
-    if not any(p["username"] == username and p["password"] == password for p in load_data(PRINCIPAL_FILE)):
-        return {"error": "Unauthorized"}
+def update_status(
+    request_id: int = Form(...), status: str = Form(...), response: str = Form(""),
+    username: str = Form(...), password: str = Form(...)
+):
+    if not verify_principal(username, password):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     requests = load_data(REQUEST_FILE)
     for r in requests:
         if r["id"] == request_id:
-            r["status"] = status
-            r["response"] = response
+            r.update({"status": status, "response": response})
             save_data(REQUEST_FILE, requests)
             return {"message": "Request updated"}
-    return {"error": "Request ID not found"}
+    raise HTTPException(status_code=404, detail="Request ID not found")
 
 @app.post("/view_requests")
-def view_requests(role: str = Form(...), username: str = Form(None), password: str = Form(None), roll: str = Form(None)):
+def view_requests(
+    role: str = Form(...), username: str = Form(None),
+    password: str = Form(None), roll: str = Form(None)
+):
     if role == "principal":
-        if any(p["username"] == username and p["password"] == password for p in load_data(PRINCIPAL_FILE)):
+        if verify_principal(username, password):
             return load_data(REQUEST_FILE)
-        return {"error": "Unauthorized"}
+        raise HTTPException(status_code=401, detail="Unauthorized")
     elif role == "student":
         if not roll:
-            return {"error": "Roll number required"}
+            raise HTTPException(status_code=400, detail="Roll number required")
         return [r for r in load_data(REQUEST_FILE) if r["roll"] == roll]
-    return {"error": "Invalid role"}
+    raise HTTPException(status_code=400, detail="Invalid role")
 
 # ---------------- Event Requests ----------------
-
 @app.post("/submit_event")
-def submit_event(title: str = Form(...), date: str = Form(...), location: str = Form(...),
-                 description: str = Form(...), name: str = Form(...), roll: str = Form(...)):
-    if not any(s["roll"] == roll for s in load_data(STUDENT_FILE)):
-        return {"error": "Student not registered"}
+def submit_event(
+    title: str = Form(...), date: str = Form(...), location: str = Form(...),
+    description: str = Form(...), roll: str = Form(...)
+):
+    student = get_student_by_roll(roll)
+    if not student:
+        raise HTTPException(status_code=400, detail="Student not registered")
     events = load_data(EVENT_FILE)
-    new_id = get_new_id(events)
     events.append({
-        "id": new_id,
+        "id": get_new_id(events),
         "title": title,
         "date": date,
         "location": location,
         "description": description,
-        "requested_by": name,
+        "requested_by": student["name"],
         "roll": roll,
+        "branch": student["branch"],
+        "year": student["year"],
         "status": "Pending",
         "response": "",
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -159,47 +200,53 @@ def view_events_by_roll(roll: str = Form(...)):
     return [e for e in load_data(EVENT_FILE) if e["roll"] == roll]
 
 @app.get("/get_event_requests")
-def get_event_requests(username: str, password: str):
-    if not any(p["username"] == username and p["password"] == password for p in load_data(PRINCIPAL_FILE)):
-        return {"error": "Unauthorized"}
+def get_event_requests(username: str = Query(...), password: str = Query(...)):
+    if not verify_principal(username, password):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return load_data(EVENT_FILE)
 
 @app.post("/update_event_status")
-def update_event_status(id: int = Form(...), title: str = Form(...), date: str = Form(...),
-                        location: str = Form(...), description: str = Form(...), status: str = Form(...),
-                        username: str = Form(...), password: str = Form(...)):
-    if not any(p["username"] == username and p["password"] == password for p in load_data(PRINCIPAL_FILE)):
-        return {"error": "Unauthorized"}
+def update_event_status(
+    id: int = Form(...), title: str = Form(...), date: str = Form(...),
+    location: str = Form(...), description: str = Form(...), status: str = Form(...),
+    username: str = Form(...), password: str = Form(...)
+):
+    if not verify_principal(username, password):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     events = load_data(EVENT_FILE)
     for e in events:
         if e["id"] == id:
-            e.update({"title": title, "date": date, "location": location,
-                      "description": description, "status": status})
+            e.update({
+                "title": title, "date": date, "location": location,
+                "description": description, "status": status
+            })
             save_data(EVENT_FILE, events)
             return {"message": "Event updated"}
-    return {"error": "Event not found"}
+    raise HTTPException(status_code=404, detail="Event not found")
 
 @app.get("/delete_event")
 def delete_event(id: int, username: str, password: str):
-    if not any(p["username"] == username and p["password"] == password for p in load_data(PRINCIPAL_FILE)):
-        return {"error": "Unauthorized"}
+    if not verify_principal(username, password):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     events = load_data(EVENT_FILE)
-    updated = [e for e in events if e["id"] != id]
-    save_data(EVENT_FILE, updated)
+    save_data(EVENT_FILE, [e for e in events if e["id"] != id])
     return {"message": "Event deleted"}
 
 # ---------------- Emergency Requests ----------------
-
 @app.post("/submit_emergency")
-def submit_emergency(name: str = Form(...), roll: str = Form(...), emergency_type: str = Form(...), description: str = Form(...)):
-    if not any(s["roll"] == roll for s in load_data(STUDENT_FILE)):
-        return {"error": "Student not registered"}
+def submit_emergency(
+    roll: str = Form(...), emergency_type: str = Form(...), description: str = Form(...)
+):
+    student = get_student_by_roll(roll)
+    if not student:
+        raise HTTPException(status_code=400, detail="Student not registered")
     emergencies = load_data(EMERGENCY_FILE)
-    new_id = get_new_id(emergencies)
     emergencies.append({
-        "id": new_id,
-        "name": name,
+        "id": get_new_id(emergencies),
+        "name": student["name"],
         "roll": roll,
+        "branch": student["branch"],
+        "year": student["year"],
         "emergency_type": emergency_type,
         "description": description,
         "status": "Pending",
@@ -211,40 +258,40 @@ def submit_emergency(name: str = Form(...), roll: str = Form(...), emergency_typ
 
 @app.get("/get_emergencies")
 def get_emergencies(username: str, password: str):
-    if not any(p["username"] == username and p["password"] == password for p in load_data(PRINCIPAL_FILE)):
-        return {"error": "Unauthorized"}
+    if not verify_principal(username, password):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     return load_data(EMERGENCY_FILE)
 
 @app.post("/update_emergency_status")
-def update_emergency_status(id: int = Form(...), status: str = Form(...), response: str = Form(""),
-                             username: str = Form(...), password: str = Form(...)):
-    if not any(p["username"] == username and p["password"] == password for p in load_data(PRINCIPAL_FILE)):
-        return {"error": "Unauthorized"}
+def update_emergency_status(
+    id: int = Form(...), status: str = Form(...), response: str = Form(""),
+    username: str = Form(...), password: str = Form(...)
+):
+    if not verify_principal(username, password):
+        raise HTTPException(status_code=401, detail="Unauthorized")
     emergencies = load_data(EMERGENCY_FILE)
     for e in emergencies:
         if e["id"] == id:
-            e["status"] = status
-            e["response"] = response
+            e.update({"status": status, "response": response})
             save_data(EMERGENCY_FILE, emergencies)
             return {"message": "Emergency request updated"}
-    return {"error": "Emergency request not found"}
+    raise HTTPException(status_code=404, detail="Emergency request not found")
 
 @app.post("/view_emergency_by_roll")
 def view_emergency_by_roll(roll: str = Form(...)):
     return [e for e in load_data(EMERGENCY_FILE) if e["roll"] == roll]
 
 # ---------------- Serve HTML Pages ----------------
-
-def serve_html(file: str):
+def serve_html(file_path: str):
     try:
-        with open(file, "r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read(), status_code=200)
     except FileNotFoundError:
-        return HTMLResponse(content=f"{file} not found", status_code=404)
+        return HTMLResponse(content=f"{file_path} not found", status_code=404)
 
 @app.get("/")
 def root():
-    return {"message": "Welcome To Principal-Student Communication App "}
+    return {"message": "Welcome To Principal-Student Communication App"}
 
 @app.get("/request", response_class=HTMLResponse)
 def request_page():
