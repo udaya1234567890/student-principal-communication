@@ -42,7 +42,14 @@
         <h2>Registered Students</h2>
         <table>
             <thead>
-                <tr><th>Name</th><th>Roll</th><th>Registered At</th><th>Action</th></tr>
+                <tr>
+                    <th>Name</th>
+                    <th>Roll</th>
+                    <th>Branch</th>
+                    <th>Year</th>
+                    <th>Registered At</th>
+                    <th>Action</th>
+                </tr>
             </thead>
             <tbody id="studentTable"></tbody>
         </table>
@@ -110,7 +117,15 @@
                 const table = document.getElementById("studentTable");
                 table.innerHTML = "";
                 data.forEach(student => {
-                    table.innerHTML += `<tr><td>${student.name}</td><td>${student.roll}</td><td>${student.registered_at}</td><td><button onclick="deleteStudent('${student.roll}')">Delete</button></td></tr>`;
+                    table.innerHTML += `
+                        <tr>
+                            <td>${student.name}</td>
+                            <td>${student.roll}</td>
+                            <td>${student.branch || "N/A"}</td>
+                            <td>${student.year || "N/A"}</td>
+                            <td>${student.registered_at}</td>
+                            <td><button onclick="deleteStudent('${student.roll}')">Delete</button></td>
+                        </tr>`;
                 });
             });
         }
@@ -135,7 +150,26 @@
                 if (data.error) return;
                 let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Roll</th><th>Reason</th><th>Start</th><th>Return</th><th>Days</th><th>Status</th><th>Response</th><th>Action</th></tr></thead><tbody>`;
                 data.forEach(req => {
-                    html += `<tr><td>${req.id}</td><td>${req.name}</td><td>${req.roll}</td><td>${req.reason}</td><td>${req.start_date}</td><td>${req.return_date}</td><td>${req.total_days}</td><td>${req.status}</td><td>${req.response || ""}</td><td><select id="leave_status_${req.id}"><option ${req.status === "Approved" ? "selected" : ""}>Approved</option><option ${req.status === "Rejected" ? "selected" : ""}>Rejected</option><option ${req.status === "Paused" ? "selected" : ""}>Paused</option></select><input type="text" id="leave_response_${req.id}" placeholder="Response"><button onclick="submitStatus(${req.id})">Submit</button></td></tr>`;
+                    html += `<tr>
+                        <td>${req.id}</td>
+                        <td>${req.name}</td>
+                        <td>${req.roll}</td>
+                        <td>${req.reason}</td>
+                        <td>${req.start_date}</td>
+                        <td>${req.return_date}</td>
+                        <td>${req.total_days}</td>
+                        <td>${req.status}</td>
+                        <td>${req.response || ""}</td>
+                        <td>
+                            <select id="leave_status_${req.id}">
+                                <option ${req.status === "Approved" ? "selected" : ""}>Approved</option>
+                                <option ${req.status === "Rejected" ? "selected" : ""}>Rejected</option>
+                                <option ${req.status === "Paused" ? "selected" : ""}>Paused</option>
+                            </select>
+                            <input type="text" id="leave_response_${req.id}" placeholder="Response">
+                            <button onclick="submitStatus(${req.id})">Submit</button>
+                        </td>
+                    </tr>`;
                 });
                 html += "</tbody></table>";
                 document.getElementById("requestsTable").innerHTML = html;
@@ -168,7 +202,25 @@
                 }
                 let html = `<table><thead><tr><th>ID</th><th>Title</th><th>Date</th><th>Location</th><th>Description</th><th>Student</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
                 data.forEach(event => {
-                    html += `<tr><td>${event.id}</td><td><input id="event_title_${event.id}" value="${event.title}"></td><td><input id="event_date_${event.id}" value="${event.date}"></td><td><input id="event_location_${event.id}" value="${event.location}"></td><td><textarea id="event_desc_${event.id}">${event.description}</textarea></td><td>${event.roll}</td><td><select id="event_status_${event.id}"><option ${event.status === "Pending" ? "selected" : ""}>Pending</option><option ${event.status === "Approved" ? "selected" : ""}>Approved</option><option ${event.status === "Rejected" ? "selected" : ""}>Rejected</option></select></td><td><button onclick="updateEvent(${event.id})">Update</button><button onclick="deleteEvent(${event.id})" style="background:red;">Delete</button></td></tr>`;
+                    html += `<tr>
+                        <td>${event.id}</td>
+                        <td><input id="event_title_${event.id}" value="${event.title}"></td>
+                        <td><input id="event_date_${event.id}" value="${event.date}"></td>
+                        <td><input id="event_location_${event.id}" value="${event.location}"></td>
+                        <td><textarea id="event_desc_${event.id}">${event.description}</textarea></td>
+                        <td>${event.roll}</td>
+                        <td>
+                            <select id="event_status_${event.id}">
+                                <option ${event.status === "Pending" ? "selected" : ""}>Pending</option>
+                                <option ${event.status === "Approved" ? "selected" : ""}>Approved</option>
+                                <option ${event.status === "Rejected" ? "selected" : ""}>Rejected</option>
+                            </select>
+                        </td>
+                        <td>
+                            <button onclick="updateEvent(${event.id})">Update</button>
+                            <button onclick="deleteEvent(${event.id})" style="background:red;">Delete</button>
+                        </td>
+                    </tr>`;
                 });
                 html += `</tbody></table>`;
                 document.getElementById("eventTable").innerHTML = html;
@@ -214,7 +266,24 @@
                 }
                 let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Roll</th><th>Type</th><th>Description</th><th>Contact</th><th>Submitted At</th><th>Status</th><th>Response</th><th>Action</th></tr></thead><tbody>`;
                 data.forEach(em => {
-                    html += `<tr><td>${em.id}</td><td>${em.name}</td><td>${em.roll}</td><td>${em.emergency_type}</td><td>${em.description}</td><td>${em.contact}</td><td>${em.submitted_at}</td><td><select id="emergency_status_${em.id}"><option ${em.status === "Pending" ? "selected" : ""}>Pending</option><option ${em.status === "Approved" ? "selected" : ""}>Approved</option><option ${em.status === "Rejected" ? "selected" : ""}>Rejected</option></select></td><td><input type="text" id="emergency_response_${em.id}" placeholder="Response" value="${em.response || ""}"></td><td><button onclick="submitEmergencyStatus(${em.id})">Submit</button></td></tr>`;
+                    html += `<tr>
+                        <td>${em.id}</td>
+                        <td>${em.name}</td>
+                        <td>${em.roll}</td>
+                        <td>${em.emergency_type}</td>
+                        <td>${em.description}</td>
+                        <td>${em.contact}</td>
+                        <td>${em.submitted_at}</td>
+                        <td>
+                            <select id="emergency_status_${em.id}">
+                                <option ${em.status === "Pending" ? "selected" : ""}>Pending</option>
+                                <option ${em.status === "Approved" ? "selected" : ""}>Approved</option>
+                                <option ${em.status === "Rejected" ? "selected" : ""}>Rejected</option>
+                            </select>
+                        </td>
+                        <td><input type="text" id="emergency_response_${em.id}" placeholder="Response" value="${em.response || ""}"></td>
+                        <td><button onclick="submitEmergencyStatus(${em.id})">Submit</button></td>
+                    </tr>`;
                 });
                 html += `</tbody></table>`;
                 document.getElementById("emergencyTable").innerHTML = html;
@@ -239,3 +308,4 @@
     </script>
 </body>
 </html>
+
