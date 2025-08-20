@@ -1,21 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Leave Request</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h2>Student Leave Request Form</h2>
-    <form id="leaveForm">
-        Name: <input type="text" name="name" required><br><br>
-        Roll No: <input type="text" name="roll" required><br><br>
-        Reason: <textarea name="reason" required></textarea><br><br>
-        Leave Start Date: <input type="date" name="start_date" required><br><br>
-        Return Date: <input type="date" name="return_date" required><br><br>
-        Number of Days: <input type="number" name="total_days" required><br><br>
-        <button type="submit">Submit Leave Request</button>
-    </form>
-
-    <p id="response" style="color:green;"></p>
+    <div class="container">
+        <h2 class="title">Student Leave Request Form</h2>
+        <form id="leaveForm" class="form-card">
+            Name: <input type="text" name="name" required><br><br>
+            Roll No: <input type="text" name="roll" required><br><br>
+            Reason: <textarea name="reason" required></textarea><br><br>
+            Leave Start Date: <input type="date" name="start_date" required><br><br>
+            Return Date: <input type="date" name="return_date" required><br><br>
+            Number of Days: <input type="number" name="total_days" required><br><br>
+            <button type="submit" class="btn">Submit Leave Request</button>
+        </form>
+        <p id="response" class="response-msg"></p>
+    </div>
 
     <script>
         document.getElementById("leaveForm").onsubmit = function(e) {
@@ -27,7 +30,9 @@
             })
             .then(res => res.json())
             .then(data => {
-                document.getElementById("response").innerText = data.message || data.error;
+                const resBox = document.getElementById("response");
+                resBox.innerText = data.message || data.error;
+                resBox.classList.add("show-response");
             });
         }
     </script>
