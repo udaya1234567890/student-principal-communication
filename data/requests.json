@@ -1,0 +1,30 @@
+[
+    {
+        "id": 1,
+        "name": "HARITHA",
+        "roll": "22991A4219",
+        "branch": "AIML",
+        "year": "4",
+        "reason": "MEDICAL LEAVE",
+        "start_date": "2025-08-19",
+        "return_date": "2025-08-23",
+        "total_days": "4",
+        "status": "Approved",
+        "response": "ok",
+        "timestamp": "2025-08-19 12:20:40"
+    },
+    {
+        "id": 2,
+        "name": "KEERTHI",
+        "roll": "22991A0434",
+        "branch": "ECE",
+        "year": "4",
+        "reason": "SICK LEAVE",
+        "start_date": "2025-08-20",
+        "return_date": "2025-08-21",
+        "total_days": "1",
+        "status": "Approved",
+        "response": "no",
+        "timestamp": "2025-08-19 12:21:28"
+    }
+]

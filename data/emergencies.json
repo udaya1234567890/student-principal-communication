@@ -1,0 +1,14 @@
+[
+    {
+        "id": 1,
+        "name": "KAVYA",
+        "roll": "22991A0415",
+        "branch": "ECE",
+        "year": "4",
+        "emergency_type": "Medical",
+        "description": "HEAVY BLEEDING ON FOURHEAD",
+        "status": "Rejected",
+        "response": "ok go ",
+        "timestamp": "2025-08-19 12:25:19"
+    }
+]

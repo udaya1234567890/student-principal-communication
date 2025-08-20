@@ -1,0 +1,821 @@
+/* ---------------- GLOBAL RESET ---------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ---------------- BODY ---------------- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px;
+    animation: fadeIn 1s ease-in-out;
+    color: #333;
+}
+
+/* Centered container wrapper */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    padding: 30px;
+    animation: slideUp 0.8s ease-out;
+}
+
+/* ---------------- HEADINGS ---------------- */
+h1, h2, h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #222;
+    font-weight: bold;
+}
+
+/* ---------------- FORMS ---------------- */
+form {
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    width: 400px;
+    margin: auto;
+    animation: slideUp 0.8s ease-out;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="number"],
+input[type="password"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: 0.3s;
+    font-size: 15px;
+    resize: none;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #2575fc;
+    outline: none;
+    box-shadow: 0 0 8px rgba(37, 117, 252, 0.5);
+}
+
+/* ---------------- BUTTONS ---------------- */
+button {
+    width: 100%;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background 0.3s;
+    font-size: 16px;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, #2575fc, #6a11cb);
+}
+
+/* Small action buttons (approve/reject/edit/delete) */
+.btn {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 6px;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+    text-decoration: none;
+}
+.btn-approve { background: #28a745; }
+.btn-reject { background: #dc3545; }
+.btn-pause { background: #ffc107; color: black; }
+.btn-edit { background: #007bff; }
+.btn-delete { background: #6c757d; }
+
+.btn:hover { opacity: 0.85; transform: scale(1.05); }
+
+/* ---------------- TABLES ---------------- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+}
+
+table th {
+    background: #2575fc;
+    color: white;
+    font-weight: bold;
+}
+
+table tr:nth-child(even) { background: #f9f9f9; }
+table tr:hover { background: #f1f1f1; transition: 0.3s; }
+
+/* ---------------- NAVIGATION BAR ---------------- */
+.navbar {
+    width: 100%;
+    background: linear-gradient(135deg, #2575fc, #6a11cb);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+.navbar h1 {
+    font-size: 20px;
+}
+
+.navbar a {
+    color: white;
+    text-decoration: none;
+    margin-left: 15px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.navbar a:hover { text-decoration: underline; }
+
+/* ---------------- CARDS (Dashboard) ---------------- */
+.card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* ---------------- MESSAGES ---------------- */
+.message, #response {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+    color: green;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Error messages */
+.error { color: red; }
+
+/* ---------------- ANIMATIONS ---------------- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+/* ---------- Event Request Page ---------- */
+form#eventForm input,
+form#eventForm textarea {
+    margin-top: 10px;
+}
+
+#eventStatus ul {
+    list-style: none;
+    padding: 0;
+}
+
+#eventStatus li.card {
+    background: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    transition: transform 0.2s;
+}
+
+#eventStatus li.card:hover {
+    transform: scale(1.02);
+}
+
+.message {
+    margin-top: 10px;
+    font-weight: bold;
+    text-align: center;
+    color: green;
+}
+/* ---------------- EMERGENCY FORM ---------------- */
+form#emergencyForm {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 30px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    animation: slideUp 0.8s ease-out;
+}
+
+form#emergencyForm h2 {
+    text-align: center;
+    color: #222;
+    margin-bottom: 20px;
+}
+
+form#emergencyForm input,
+form#emergencyForm textarea,
+form#emergencyForm select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    transition: 0.3s;
+}
+
+form#emergencyForm input:focus,
+form#emergencyForm textarea:focus,
+form#emergencyForm select:focus {
+    border-color: #e74c3c;
+    outline: none;
+    box-shadow: 0 0 8px rgba(231,76,60,0.5);
+}
+
+form#emergencyForm button {
+    background: #e74c3c;
+    color: white;
+    font-weight: bold;
+    padding: 12px;
+    margin-top: 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background 0.3s;
+}
+
+form#emergencyForm button:hover {
+    transform: scale(1.05);
+    background: #c0392b;
+}
+
+form#emergencyForm .message {
+    margin-top: 20px;
+    text-align: center;
+    font-weight: bold;
+    animation: fadeIn 0.5s ease-in-out;
+}
+/* ---------------- EMERGENCY STATUS TABLE ---------------- */
+#statusTable {
+    margin-top: 25px;
+    overflow-x: auto;
+}
+
+#statusTable table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#statusTable th, #statusTable td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+#statusTable th {
+    background: #e74c3c;
+    color: white;
+    font-weight: bold;
+}
+
+#statusTable tr:nth-child(even) { background: #f9f9f9; }
+#statusTable tr:hover { background: #f1f1f1; transition: 0.3s; }
+
+#roll {
+    padding: 12px;
+    margin-top: 15px;
+    width: 100%;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+    outline: none;
+}
+
+#roll:focus {
+    border-color: #e74c3c;
+    box-shadow: 0 0 8px rgba(231,76,60,0.5);
+}
+
+#statusTable button {
+    background: #e74c3c;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+#statusTable button:hover {
+    background: #c0392b;
+}
+
+.message.error {
+    color: red;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 15px;
+}
+/* ---------------- GLOBAL RESET ---------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* ---------------- BODY ---------------- */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 40px;
+    animation: fadeIn 1s ease-in-out;
+    color: #333;
+}
+
+/* ---------------- CONTAINER ---------------- */
+.container {
+    width: 100%;
+    max-width: 900px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    padding: 30px;
+    animation: slideUp 0.8s ease-out;
+}
+
+/* ---------------- HEADINGS ---------------- */
+h1, h2, h3 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #222;
+    font-weight: bold;
+}
+
+/* ---------------- FORMS ---------------- */
+form, .status-form {
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    width: 100%;
+    margin: auto 0 30px 0;
+    animation: slideUp 0.8s ease-out;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="number"],
+input[type="password"],
+textarea,
+select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    transition: 0.3s;
+    font-size: 15px;
+    resize: none;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #2575fc;
+    outline: none;
+    box-shadow: 0 0 8px rgba(37, 117, 252, 0.5);
+}
+
+/* ---------------- BUTTONS ---------------- */
+button {
+    width: 100%;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background 0.3s;
+    font-size: 16px;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(135deg, #2575fc, #6a11cb);
+}
+
+/* ---------------- SMALL ACTION BUTTONS ---------------- */
+.btn {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 6px;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+    text-decoration: none;
+}
+.btn-approve { background: #28a745; }
+.btn-reject { background: #dc3545; }
+.btn-pause { background: #ffc107; color: black; }
+.btn-edit { background: #007bff; }
+.btn-delete { background: #6c757d; }
+.btn:hover { opacity: 0.85; transform: scale(1.05); }
+
+/* ---------------- TABLES ---------------- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+}
+
+table th {
+    background: #2575fc;
+    color: white;
+    font-weight: bold;
+}
+
+table tr:nth-child(even) { background: #f9f9f9; }
+table tr:hover { background: #f1f1f1; transition: 0.3s; }
+
+/* ---------------- CARDS ---------------- */
+.card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease-in-out;
+}
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* ---------------- MESSAGES ---------------- */
+.message, #response {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+    color: green;
+    animation: fadeIn 0.5s ease-in-out;
+}
+.error { color: red; }
+
+/* ---------------- ANIMATIONS ---------------- */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+/* FORM FIELDS */
+form .form-fields {
+    display: none;
+    margin-top: 15px;
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+button {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 20px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+/* TABLE */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: center;
+}
+
+.table th {
+    background: #2575fc;
+    color: white;
+}
+
+.table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.table tr:hover {
+    background: #f1f1f1;
+}
+
+/* CONTAINER */
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+/* TABLE STYLING */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.table th {
+    background: #2575fc;
+    color: white;
+}
+
+.table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.table tr:hover {
+    background: #f1f1f1;
+}
+
+/* CONTAINER */
+.container {
+    max-width: 800px;
+    margin: auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+h2 {
+    text-align: center;
+    color: #2c3e50;
+}
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: #fff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+h2 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+input {
+    padding: 10px;
+    margin: 5px 5px 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    width: calc(50% - 12px);
+}
+
+.form-buttons button {
+    padding: 10px 20px;
+    margin: 5px 5px 15px 0;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#registerBtn {
+    background-color: #28a745;
+    color: white;
+}
+
+#registerBtn:hover {
+    background-color: #218838;
+}
+
+#updateBtn {
+    background-color: #ffc107;
+    color: #fff;
+}
+
+#updateBtn:hover {
+    background-color: #e0a800;
+}
+
+.hidden { display: none; }
+
+.status-message {
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #e74c3c;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.table th, .table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.table th {
+    background: #3498db;
+    color: white;
+}
+
+.table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.table tr:hover {
+    background: #f1f1f1;
+}
+
+.edit-btn {
+    background-color: #ffc107;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.edit-btn:hover {
+    background-color: #e0a800;
+}
+
+.delete-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background-color: #c0392b;
+}
+
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* Cards */
+.card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+/* Headings */
+h1, h2 {
+    color: #2c3e50;
+}
+
+/* Buttons */
+.btn-primary {
+    padding: 10px 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+/* Tables */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+.table th, .table td {
+    padding: 10px;
+    border: 1px solid #0c0c0c;
+    text-align: left;
+}
+.table th {
+    background-color: white;
+}
+
+/* Hidden */
+.hidden {
+    display: none;
+}
+
+/* Status messages */
+.status-message {
+    margin-top: 10px;
+    font-weight: bold;
+}
+.status-message.success {
+    color: green;
+}
+.status-message.error {
+    color: red;
+}
