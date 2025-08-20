@@ -1,14 +1,9 @@
 [
     {
-        "name": "suma latha",
-        "roll": "214"
-    },
-    {
-        "name": "hari",
-        "roll": "219"
-    },
-    {
-        "name": "bhanu",
-        "roll": "213"
+        "name": "pavani",
+        "roll": "201",
+        "branch": "AIML",
+        "year": "4",
+        "registered_at": "2025-08-10 21:47:17"
     }
 ]
