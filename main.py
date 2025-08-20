@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Form, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from datetime import datetime
 import json
 import os
@@ -16,6 +17,9 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
+# ---------------- Serve Static Files ----------------
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # ---------------- File Paths ----------------
 DATA_DIR = "data"
 STUDENT_FILE = os.path.join(DATA_DIR, "students.json")
@@ -23,7 +27,6 @@ PRINCIPAL_FILE = os.path.join(DATA_DIR, "principals.json")
 REQUEST_FILE = os.path.join(DATA_DIR, "requests.json")
 EVENT_FILE = os.path.join(DATA_DIR, "events.json")
 EMERGENCY_FILE = os.path.join(DATA_DIR, "emergencies.json")
-
 os.makedirs(DATA_DIR, exist_ok=True)
 
 # ---------------- Utility Functions ----------------
@@ -54,8 +57,7 @@ def verify_principal(username: str, password: str):
     )
 
 def get_student_by_roll(roll: str):
-    students = load_data(STUDENT_FILE)
-    for s in students:
+    for s in load_data(STUDENT_FILE):
         if s["roll"] == roll:
             return s
     return None
@@ -193,11 +195,52 @@ def submit_event(
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     })
     save_data(EVENT_FILE, events)
-    return {"message": "Event request submitted"}
+    return {"message": "Event request submitted"} 
 
-@app.post("/view_events_by_roll")
-def view_events_by_roll(roll: str = Form(...)):
-    return [e for e in load_data(EVENT_FILE) if e["roll"] == roll]
+@app.post("/update_event")
+def update_event(
+    eventId: int = Form(...),
+    status: str = Form(...),
+    principalusername: str = Form(...),
+    principalpassword: str = Form(...),
+    title: str = Form(None),
+    date: str = Form(None),
+    location: str = Form(None),
+    description: str = Form(None)
+):
+    if not verify_principal(principalusername, principalpassword):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    events = load_data(EVENT_FILE)
+    for e in events:
+        if e["id"] == eventId:
+            if title: e["title"] = title
+            if date: e["date"] = date
+            if location: e["location"] = location
+            if description: e["description"] = description
+            e["status"] = status
+            save_data(EVENT_FILE, events)
+            return {"message": "Event updated successfully", "event": e}
+
+    raise HTTPException(status_code=404, detail="Event not found")
+
+@app.post("/delete_event")
+def delete_event(
+    eventId: int = Form(...),
+    principalusername: str = Form(...),
+    principalpassword: str = Form(...)
+):
+    if not verify_principal(principalusername, principalpassword):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    events = load_data(EVENT_FILE)
+    updated_events = [e for e in events if e["id"] != eventId]
+
+    if len(updated_events) == len(events):
+        raise HTTPException(status_code=404, detail="Event not found")
+
+    save_data(EVENT_FILE, updated_events)
+    return {"message": "Event deleted successfully"}
 
 @app.get("/get_event_requests")
 def get_event_requests(username: str = Query(...), password: str = Query(...)):
@@ -205,32 +248,9 @@ def get_event_requests(username: str = Query(...), password: str = Query(...)):
         raise HTTPException(status_code=401, detail="Unauthorized")
     return load_data(EVENT_FILE)
 
-@app.post("/update_event_status")
-def update_event_status(
-    id: int = Form(...), title: str = Form(...), date: str = Form(...),
-    location: str = Form(...), description: str = Form(...), status: str = Form(...),
-    username: str = Form(...), password: str = Form(...)
-):
-    if not verify_principal(username, password):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    events = load_data(EVENT_FILE)
-    for e in events:
-        if e["id"] == id:
-            e.update({
-                "title": title, "date": date, "location": location,
-                "description": description, "status": status
-            })
-            save_data(EVENT_FILE, events)
-            return {"message": "Event updated"}
-    raise HTTPException(status_code=404, detail="Event not found")
-
-@app.get("/delete_event")
-def delete_event(id: int, username: str, password: str):
-    if not verify_principal(username, password):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    events = load_data(EVENT_FILE)
-    save_data(EVENT_FILE, [e for e in events if e["id"] != id])
-    return {"message": "Event deleted"}
+@app.post("/view_events_by_roll")
+def view_events_by_roll(roll: str = Form(...)):
+    return [e for e in load_data(EVENT_FILE) if e["roll"] == roll]
 
 # ---------------- Emergency Requests ----------------
 @app.post("/submit_emergency")
@@ -289,10 +309,49 @@ def serve_html(file_path: str):
     except FileNotFoundError:
         return HTMLResponse(content=f"{file_path} not found", status_code=404)
 
-@app.get("/")
-def root():
-    return {"message": "Welcome To Principal-Student Communication App"}
+# ---------------- Home Page with Centered Welcome Message ----------------
 
+@app.get("/", response_class=HTMLResponse)
+def home():
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Principal-Student Communication App</title>
+        <!-- Google Font -->
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
+        <style>
+            body {
+                height: 100vh;
+                margin: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                background: linear-gradient(135deg, #74ebd5, #ACB6E5); /* gradient background */
+                font-family: 'Poppins', sans-serif;
+            }
+            h1 {
+                font-size: 60px;
+                color: black;
+                text-align: center;
+                text-shadow: 3px 3px 10px rgba(0,0,0,0.3);
+                animation: fadeIn 2s ease-in-out;
+            }
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(-20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Welcome To Principal-Student Communication App</h1>
+    </body>
+    </html>
+    """
+    return HTMLResponse(content=html_content)
+
+
+# ---------------- Other HTML Pages ----------------
 @app.get("/request", response_class=HTMLResponse)
 def request_page():
     return serve_html("request.html")
