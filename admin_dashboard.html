@@ -3,309 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <title>Principal Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f9f9f9; }
-        h1, h2 { color: #2c3e50; }
-        .hidden { display: none; }
-        input, select, button, textarea {
-            margin: 5px 0; padding: 8px; font-size: 14px; width: 100%;
-        }
-        button {
-            background-color: #3498db; color: white; border: none; cursor: pointer;
-        }
-        button:hover { background-color: #2980b9; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-        th { background-color: #ecf0f1; }
-    </style>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h1>Principal Dashboard</h1>
-    <div id="registerSection">
-        <h2>Register</h2>
-        <input type="text" id="regUsername" placeholder="Username">
-        <input type="email" id="regEmail" placeholder="Email">
-        <input type="password" id="regPassword" placeholder="Password">
-        <button onclick="registerPrincipal()">Register</button>
-        <p id="registerMessage" style="color: green;"></p>
-    </div>
+    <div class="container">
+        <h1>Principal Dashboard</h1>
 
-    <div id="loginSection">
-        <h2>Login</h2>
-        <input type="text" id="loginUsername" placeholder="Username">
-        <input type="password" id="loginPassword" placeholder="Password">
-        <button onclick="loginPrincipal()">Login</button>
-        <p id="loginError" style="color: red;"></p>
-    </div>
+        <!-- Registration -->
+        <div id="registerSection" class="card">
+            <h2>Register Principal</h2>
+            <input type="text" id="regUsername" placeholder="Username">
+            <input type="email" id="regEmail" placeholder="Email">
+            <input type="password" id="regPassword" placeholder="Password">
+            <button class="btn-primary" onclick="registerPrincipal()">Register</button>
+            <p id="registerMessage" class="status-message success"></p>
+        </div>
 
-    <div class="hidden" id="dashboard">
-        <h2>Registered Students</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Roll</th>
-                    <th>Branch</th>
-                    <th>Year</th>
-                    <th>Registered At</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody id="studentTable"></tbody>
-        </table>
+        <!-- Login -->
+        <div id="loginSection" class="card">
+            <h2>Login</h2>
+            <input type="text" id="loginUsername" placeholder="Username">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button class="btn-primary" onclick="loginPrincipal()">Login</button>
+            <p id="loginError" class="status-message error"></p>
+        </div>
 
-        <h2>Leave Requests</h2>
-        <div id="requestsTable"></div>
-
-        <h2>Event Requests</h2>
-        <div id="eventTable"></div>
-
-        <h2>Emergency Requests</h2>
-        <div id="emergencyTable"></div>
-    </div>
-
-    <script>
-        const BASE_URL = "http://127.0.0.1:8000";
-        let principalUsername = "";
-        let principalPassword = "";
-
-        function registerPrincipal() {
-            const username = document.getElementById("regUsername").value;
-            const email = document.getElementById("regEmail").value;
-            const password = document.getElementById("regPassword").value;
-            fetch(`${BASE_URL}/register_principal`, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: `username=${username}&email=${email}&password=${password}`
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById("registerMessage").innerText = data.message || data.error;
-            });
-        }
-
-        function loginPrincipal() {
-            const username = document.getElementById("loginUsername").value;
-            const password = document.getElementById("loginPassword").value;
-            fetch(`${BASE_URL}/login_principal`, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: `username=${username}&password=${password}`
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    principalUsername = username;
-                    principalPassword = password;
-                    document.getElementById("registerSection").classList.add("hidden");
-                    document.getElementById("loginSection").classList.add("hidden");
-                    document.getElementById("dashboard").classList.remove("hidden");
-                    loadStudents();
-                    loadRequests();
-                    loadEventRequests();
-                    loadEmergencyRequests();
-                } else {
-                    document.getElementById("loginError").innerText = data.message || "Login failed";
-                }
-            });
-        }
-
-        function loadStudents() {
-            fetch(`${BASE_URL}/students`)
-            .then(res => res.json())
-            .then(data => {
-                const table = document.getElementById("studentTable");
-                table.innerHTML = "";
-                data.forEach(student => {
-                    table.innerHTML += `
+        <!-- Dashboard -->
+        <div id="dashboard" class="hidden">
+            <!-- Students -->
+            <div class="card">
+                <h2>Registered Students</h2>
+                <table class="table">
+                    <thead>
                         <tr>
-                            <td>${student.name}</td>
-                            <td>${student.roll}</td>
-                            <td>${student.branch || "N/A"}</td>
-                            <td>${student.year || "N/A"}</td>
-                            <td>${student.registered_at}</td>
-                            <td><button onclick="deleteStudent('${student.roll}')">Delete</button></td>
-                        </tr>`;
-                });
-            });
-        }
+                            <th>Name</th>
+                            <th>Roll</th>
+                            <th>Branch</th>
+                            <th>Year</th>
+                            <th>Registered At</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTable"></tbody>
+                </table>
+            </div>
 
-        function deleteStudent(roll) {
-            fetch(`${BASE_URL}/delete_student/${roll}`, { method: "DELETE" })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.message || data.error);
-                loadStudents();
-            });
-        }
+            <!-- Leave Requests -->
+            <div class="card">
+                <h2>Leave Requests</h2>
+                <div id="requestsTable"></div>
+            </div>
 
-        function loadRequests() {
-            fetch(`${BASE_URL}/view_requests`, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: `role=principal&username=${principalUsername}&password=${principalPassword}`
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) return;
-                let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Roll</th><th>Reason</th><th>Start</th><th>Return</th><th>Days</th><th>Status</th><th>Response</th><th>Action</th></tr></thead><tbody>`;
-                data.forEach(req => {
-                    html += `<tr>
-                        <td>${req.id}</td>
-                        <td>${req.name}</td>
-                        <td>${req.roll}</td>
-                        <td>${req.reason}</td>
-                        <td>${req.start_date}</td>
-                        <td>${req.return_date}</td>
-                        <td>${req.total_days}</td>
-                        <td>${req.status}</td>
-                        <td>${req.response || ""}</td>
-                        <td>
-                            <select id="leave_status_${req.id}">
-                                <option ${req.status === "Approved" ? "selected" : ""}>Approved</option>
-                                <option ${req.status === "Rejected" ? "selected" : ""}>Rejected</option>
-                                <option ${req.status === "Paused" ? "selected" : ""}>Paused</option>
-                            </select>
-                            <input type="text" id="leave_response_${req.id}" placeholder="Response">
-                            <button onclick="submitStatus(${req.id})">Submit</button>
-                        </td>
-                    </tr>`;
-                });
-                html += "</tbody></table>";
-                document.getElementById("requestsTable").innerHTML = html;
-            });
-        }
+            <!-- Event Requests -->
+            <div class="card">
+                <h2>Event Requests</h2>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Location</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventTable"></tbody>
+                </table>
+            </div>
 
-        function submitStatus(id) {
-            const status = document.getElementById(`leave_status_${id}`).value;
-            const response = document.getElementById(`leave_response_${id}`).value;
-            const body = `request_id=${id}&status=${status}&response=${encodeURIComponent(response)}&username=${principalUsername}&password=${principalPassword}`;
-            fetch(`${BASE_URL}/update_status`, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: body
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.message || data.error);
-                loadRequests();
-            });
-        }
+            <!-- Emergency Requests -->
+            <div class="card">
+                <h2>Emergency Requests</h2>
+                <div id="emergencyTable"></div>
+            </div>
+        </div>
+    </div>
 
-        function loadEventRequests() {
-            fetch(`${BASE_URL}/get_event_requests?username=${principalUsername}&password=${principalPassword}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    document.getElementById("eventTable").innerText = data.error;
-                    return;
-                }
-                let html = `<table><thead><tr><th>ID</th><th>Title</th><th>Date</th><th>Location</th><th>Description</th><th>Student</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
-                data.forEach(event => {
-                    html += `<tr>
-                        <td>${event.id}</td>
-                        <td><input id="event_title_${event.id}" value="${event.title}"></td>
-                        <td><input id="event_date_${event.id}" value="${event.date}"></td>
-                        <td><input id="event_location_${event.id}" value="${event.location}"></td>
-                        <td><textarea id="event_desc_${event.id}">${event.description}</textarea></td>
-                        <td>${event.roll}</td>
-                        <td>
-                            <select id="event_status_${event.id}">
-                                <option ${event.status === "Pending" ? "selected" : ""}>Pending</option>
-                                <option ${event.status === "Approved" ? "selected" : ""}>Approved</option>
-                                <option ${event.status === "Rejected" ? "selected" : ""}>Rejected</option>
-                            </select>
-                        </td>
-                        <td>
-                            <button onclick="updateEvent(${event.id})">Update</button>
-                            <button onclick="deleteEvent(${event.id})" style="background:red;">Delete</button>
-                        </td>
-                    </tr>`;
-                });
-                html += `</tbody></table>`;
-                document.getElementById("eventTable").innerHTML = html;
-            });
-        }
-
-        function updateEvent(eventId) {
-            const title = document.getElementById(`event_title_${eventId}`).value;
-            const date = document.getElementById(`event_date_${eventId}`).value;
-            const location = document.getElementById(`event_location_${eventId}`).value;
-            const description = document.getElementById(`event_desc_${eventId}`).value;
-            const status = document.getElementById(`event_status_${eventId}`).value;
-            const body = `id=${eventId}&title=${title}&date=${date}&location=${location}&description=${description}&status=${status}&username=${principalUsername}&password=${principalPassword}`;
-            fetch(`${BASE_URL}/update_event_status`, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: body
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.message || data.error);
-                loadEventRequests();
-            });
-        }
-
-        function deleteEvent(id) {
-            if (!confirm("Are you sure you want to delete this event?")) return;
-            fetch(`${BASE_URL}/delete_event?id=${id}&username=${principalUsername}&password=${principalPassword}`)
-            .then(res => res.json())
-            .then(data => {
-                alert(data.message || data.error);
-                loadEventRequests();
-            });
-        }
-
-        function loadEmergencyRequests() {
-            fetch(`${BASE_URL}/get_emergencies?username=${principalUsername}&password=${principalPassword}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.error) {
-                    document.getElementById("emergencyTable").innerText = data.error;
-                    return;
-                }
-                let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Roll</th><th>Type</th><th>Description</th><th>Contact</th><th>Submitted At</th><th>Status</th><th>Response</th><th>Action</th></tr></thead><tbody>`;
-                data.forEach(em => {
-                    html += `<tr>
-                        <td>${em.id}</td>
-                        <td>${em.name}</td>
-                        <td>${em.roll}</td>
-                        <td>${em.emergency_type}</td>
-                        <td>${em.description}</td>
-                        <td>${em.contact}</td>
-                        <td>${em.submitted_at}</td>
-                        <td>
-                            <select id="emergency_status_${em.id}">
-                                <option ${em.status === "Pending" ? "selected" : ""}>Pending</option>
-                                <option ${em.status === "Approved" ? "selected" : ""}>Approved</option>
-                                <option ${em.status === "Rejected" ? "selected" : ""}>Rejected</option>
-                            </select>
-                        </td>
-                        <td><input type="text" id="emergency_response_${em.id}" placeholder="Response" value="${em.response || ""}"></td>
-                        <td><button onclick="submitEmergencyStatus(${em.id})">Submit</button></td>
-                    </tr>`;
-                });
-                html += `</tbody></table>`;
-                document.getElementById("emergencyTable").innerHTML = html;
-            });
-        }
-
-        function submitEmergencyStatus(id) {
-            const status = document.getElementById(`emergency_status_${id}`).value;
-            const response = document.getElementById(`emergency_response_${id}`).value;
-            const body = `id=${id}&status=${status}&response=${encodeURIComponent(response)}&username=${principalUsername}&password=${principalPassword}`;
-            fetch(`${BASE_URL}/update_emergency_status`, {
-                method: "POST",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: body
-            })
-            .then(res => res.json())
-            .then(data => {
-                alert(data.message || data.error);
-                loadEmergencyRequests();
-            });
-        }
-    </script>
+    <script src="/static/admin_dashboard.js"></script>
 </body>
 </html>
-
