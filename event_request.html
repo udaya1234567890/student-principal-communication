@@ -3,35 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <title>Event Request - Student</title>
-    <style>
-        body { font-family: Arial, sans-serif; background: #f0f0f0; padding: 30px; }
-        h2 { color: #333; }
-        form, .status { background: #fff; padding: 20px; border-radius: 5px; margin-bottom: 20px; }
-        input, textarea, button { display: block; width: 100%; margin-top: 10px; padding: 10px; }
-        button { background: #007BFF; color: #fff; border: none; cursor: pointer; }
-        button:hover { background: #0056b3; }
-    </style>
+    <!-- Link to your existing CSS -->
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <h2>Event Request Form</h2>
-    <form id="eventForm">
-        <label>Student Name: <input type="text" id="name" required></label>
-        <label>Roll Number: <input type="text" id="roll" required></label>
-        <label>Event Title: <input type="text" id="title" required></label>
-        <label>Event Date: <input type="date" id="date" required></label>
-        <label>Location: <input type="text" id="location" required></label>
-        <label>Description: <textarea id="description" rows="4" required></textarea></label>
-        <button type="submit">Submit Event Request</button>
-        <p id="message" style="color: green;"></p>
-    </form>
+    <div class="container">
+        <h2>Event Request Form</h2>
+        <form id="eventForm">
+            <label>Student Name:</label>
+            <input type="text" id="name" required>
 
-    <h2>Check Your Event Requests</h2>
-    <form onsubmit="event.preventDefault(); fetchEvents();">
-        <label>Enter Roll Number: <input type="text" id="searchRoll" required></label>
-        <button type="submit">View My Events</button>
-    </form>
+            <label>Roll Number:</label>
+            <input type="text" id="roll" required>
 
-    <div class="status" id="eventStatus"></div>
+            <label>Event Title:</label>
+            <input type="text" id="title" required>
+
+            <label>Event Date:</label>
+            <input type="date" id="date" required>
+
+            <label>Location:</label>
+            <input type="text" id="location" required>
+
+            <label>Description:</label>
+            <textarea id="description" rows="4" required></textarea>
+
+            <button type="submit">Submit Event Request</button>
+            <p class="message" id="message"></p>
+        </form>
+
+        <h2>Check Your Event Requests</h2>
+        <form onsubmit="event.preventDefault(); fetchEvents();">
+            <label>Enter Roll Number:</label>
+            <input type="text" id="searchRoll" required>
+            <button type="submit">View My Events</button>
+        </form>
+
+        <div class="card" id="eventStatus"></div>
+    </div>
 
     <script>
         const BASE_URL = "http://127.0.0.1:8000";
@@ -39,14 +48,13 @@
         document.getElementById("eventForm").addEventListener("submit", function (e) {
             e.preventDefault();
 
-            const name = document.getElementById("name").value;
             const roll = document.getElementById("roll").value;
             const title = document.getElementById("title").value;
             const date = document.getElementById("date").value;
             const location = document.getElementById("location").value;
             const description = document.getElementById("description").value;
 
-            const body = `name=${encodeURIComponent(name)}&roll=${encodeURIComponent(roll)}&title=${encodeURIComponent(title)}&date=${encodeURIComponent(date)}&location=${encodeURIComponent(location)}&description=${encodeURIComponent(description)}`;
+            const body = `roll=${encodeURIComponent(roll)}&title=${encodeURIComponent(title)}&date=${encodeURIComponent(date)}&location=${encodeURIComponent(location)}&description=${encodeURIComponent(description)}`;
 
             fetch(`${BASE_URL}/submit_event`, {
                 method: "POST",
@@ -77,10 +85,11 @@
                 } else {
                     html += `<ul>`;
                     events.forEach(event => {
-                        html += `<li><strong>${event.title}</strong> (${event.date}) at ${event.location}<br>
-                            Status: <strong>${event.status}</strong><br>
-                            Response: ${event.response || "No response yet"}<br><br>
-                        </li>`;
+                        html += `<li class="card">
+                                    <strong>${event.title}</strong> (${event.date}) at ${event.location}<br>
+                                    Status: <strong>${event.status}</strong><br>
+                                    Response: ${event.response || "No response yet"}
+                                </li>`;
                     });
                     html += `</ul>`;
                 }
