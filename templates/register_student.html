@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Registration</title>
+    <!-- Link external CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+>
+</head>
+<body>
+    <form id="registrationForm">
+        <h2>Register Student</h2>
+        <input type="text" name="name" placeholder="Enter Name" required>
+        <input type="text" name="roll" placeholder="Enter Roll Number" required>
+
+        <!-- Branch field -->
+        <select name="branch" required>
+            <option value="" disabled selected>Select Branch</option>
+            <option value="CSE">Computer Science (CSE)</option>
+            <option value="ECE">Electronics & Communication (ECE)</option>
+            <option value="EEE">Electrical & Electronics (EEE)</option>
+            <option value="MECH">Mechanical (MECH)</option>
+            <option value="CIVIL">Civil Engineering</option>
+            <option value="AIML">AI & ML</option>
+        </select>
+
+        <!-- Year field -->
+        <select name="year" required>
+            <option value="" disabled selected>Select Year</option>
+            <option value="1">1st Year</option>
+            <option value="2">2nd Year</option>
+            <option value="3">3rd Year</option>
+            <option value="4">4th Year</option>
+        </select>
+
+        <button type="submit">Register</button>
+        <div class="message" id="messageBox"></div>
+    </form>
+
+    <script>
+        const form = document.getElementById('registrationForm');
+        const messageBox = document.getElementById('messageBox');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            try {
+                const response = await fetch("/register_student", {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+                if (result.message) {
+                    messageBox.style.color = "green";
+                    messageBox.textContent = result.message;
+                } else {
+                    messageBox.style.color = "red";
+                    messageBox.textContent = result.error || "Registration failed";
+                }
+            } catch (error) {
+                messageBox.style.color = "red";
+                messageBox.textContent = "Error submitting form.";
+            }
+        });
+    </script>
+</body>
+</html>

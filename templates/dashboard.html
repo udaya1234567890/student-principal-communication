@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard - Student Management</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Register Student -->
+    <h2>📥 Register Student</h2>
+    <form id="registerForm">
+      <div class="form-group">
+        <input type="text" name="name" placeholder="Enter Name" required>
+        <input type="text" name="roll_number" placeholder="Enter Roll Number" required>
+        <button type="submit">Register</button>
+      </div>
+    </form>
+
+    <!-- Student List -->
+    <h2>📋 Registered Students</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Roll Number</th>
+          <th>Registered At</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for student in students %}
+        <tr>
+          <td>{{ student["name"] }}</td>
+          <td>{{ student["roll_number"] }}</td>
+          <td>{{ student.get("registered_at", "Not captured") }}</td>
+          <td class="action-btn">
+            <button type="button" onclick="editStudent('{{ student['roll_number'] }}', '{{ student['name'] }}')">Edit</button>
+            <button type="button" onclick="deleteStudent('{{ student['roll_number'] }}')">Delete</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+  // -------- Register Student --------
+  document.getElementById("registerForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+
+    fetch("/register_student", {
+      method: "POST",
+      body: new URLSearchParams(formData)
+    })
+    .then(res => res.json())
+    .then(data => {
+      alert(data.message);
+      location.reload();
+    });
+  });
+
+  // -------- Delete Student --------
+  function deleteStudent(rollNumber) {
+    if(confirm("Are you sure you want to delete this student?")) {
+      fetch("/delete_student", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `roll_number=${rollNumber}`
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        location.reload();
+      });
+    }
+  }
+
+  // -------- Edit Student --------
+  function editStudent(rollNumber, currentName) {
+    const newName = prompt("Enter new name for student:", currentName);
+    if(newName && newName.trim() !== "") {
+      fetch("/update_student", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `roll_number=${rollNumber}&new_name=${encodeURIComponent(newName)}`
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert(data.message);
+        location.reload();
+      });
+    }
+  }
+  </script>
+</body>
+</html>

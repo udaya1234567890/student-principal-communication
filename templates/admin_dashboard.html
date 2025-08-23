@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Principal Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    /* Layout for register + login side by side */
+    .auth-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      width: 100%;
+      margin-bottom: 30px;
+    }
+
+    .auth-card {
+      flex: 1;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .auth-card h2 {
+      margin-bottom: 15px;
+      font-size: 22px;
+    }
+
+    .auth-card input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    .auth-card button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      background: #2575fc;
+      color: #fff;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .auth-card button:hover {
+      background: #1254c4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Principal Dashboard</h1>
+
+    <!-- Register + Login side by side -->
+    <div class="auth-section">
+      <!-- Registration -->
+      <div id="registerSection" class="auth-card">
+        <h2>Register Principal</h2>
+        <input type="text" id="regUsername" placeholder="Username">
+        <input type="email" id="regEmail" placeholder="Email">
+        <input type="password" id="regPassword" placeholder="Password">
+        <button onclick="registerPrincipal()">Register</button>
+        <p id="registerMessage" class="status-message success"></p>
+      </div>
+
+      <!-- Login -->
+      <div id="loginSection" class="auth-card">
+        <h2>Login</h2>
+        <input type="text" id="loginUsername" placeholder="Username">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="loginPrincipal()">Login</button>
+        <p id="loginError" class="status-message error"></p>
+      </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden">
+      <!-- Students -->
+      <div class="card">
+        <h2>Registered Students</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Roll</th>
+              <th>Branch</th>
+              <th>Year</th>
+              <th>Registered At</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="studentTable"></tbody>
+        </table>
+      </div>
+
+      <!-- Leave Requests -->
+      <div class="card">
+        <h2>Leave Requests</h2>
+        <div id="requestsTable"></div>
+      </div>
+
+      <!-- Event Requests -->
+      <div class="card">
+        <h2>Event Requests</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Date</th>
+              <th>Location</th>
+              <th>Description</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="eventTable"></tbody>
+        </table>
+      </div>
+
+      <!-- Emergency Requests -->
+      <div class="card">
+        <h2>Emergency Requests</h2>
+        <div id="emergencyTable"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/admin_dashboard.js"></script>
+</body>
+</html>

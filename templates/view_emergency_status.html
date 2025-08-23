@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Emergency Request Status</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>View Emergency Request Status</h2>
+
+        <input type="text" id="roll" placeholder="Enter your roll number">
+        <button onclick="viewStatus()">View Status</button>
+
+        <div id="statusTable" class="card"></div>
+    </div>
+
+    <script>
+        function viewStatus() {
+            const roll = document.getElementById("roll").value.trim();
+            if (!roll) {
+                alert("Please enter your roll number.");
+                return;
+            }
+
+            fetch("/view_emergency_by_roll", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: `roll=${encodeURIComponent(roll)}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!Array.isArray(data) || data.length === 0) {
+                    document.getElementById("statusTable").innerHTML = "<p class='message error'>No requests found.</p>";
+                    return;
+                }
+
+                let html = `<table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Type</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th>Response</th>
+                            <th>Submitted At</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+                data.forEach(req => {
+                    html += `<tr>
+                        <td>${req.id}</td>
+                        <td>${req.emergency_type}</td>
+                        <td>${req.description}</td>
+                        <td>${req.status}</td>
+                        <td>${req.response || "Pending"}</td>
+                        <td>${req.timestamp}</td>
+                    </tr>`;
+                });
+
+                html += "</tbody></table>";
+                document.getElementById("statusTable").innerHTML = html;
+            })
+            .catch(err => {
+                document.getElementById("statusTable").innerHTML = `<p class='message error'>Error fetching requests: ${err.message}</p>`;
+            });
+        }
+    </script>
+</body>
+</html>
