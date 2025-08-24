@@ -26,5 +26,48 @@
         "status": "Approved",
         "response": "no",
         "timestamp": "2025-08-19 12:21:28"
+    },
+    {
+        "id": 3,
+        "name": "UDAYABHANU",
+        "roll": "22991A4213",
+        "branch": "AIML",
+        "year": "4",
+        "reason": "medical leave",
+        "start_date": "2025-08-22",
+        "return_date": "2025-08-23",
+        "total_days": "1",
+        "status": "Pending",
+        "response": "",
+        "timestamp": "2025-08-22 18:38:23"
+    },
+ 
+    {
+        "id": 9,
+        "name": "SHANNU",
+        "roll": "22991A4215",
+        "branch": "AIML",
+        "year": "4",
+        "reason": "HOUSE OPENING",
+        "start_date": "2025-08-22",
+        "return_date": "2025-08-23",
+        "total_days": "1",
+        "status": "Approved",
+        "response": "ok",
+        "timestamp": "2025-08-22 19:32:12"
+    },
+    {
+        "id": 10,
+        "name": "PAVANI",
+        "roll": "22991A4201",
+        "branch": "AIML",
+        "year": "4",
+        "reason": "GOING TO HOME",
+        "start_date": "2025-08-23",
+        "return_date": "2025-08-24",
+        "total_days": "1",
+        "status": "Pending",
+        "response": "",
+        "timestamp": "2025-08-23 11:55:09"
     }
 ]
