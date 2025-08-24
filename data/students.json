@@ -26,5 +26,47 @@
         "branch": "ECE",
         "year": "4",
         "registered_at": "2025-08-19 12:20:12"
+    },
+    {
+        "name": "LALITHA",
+        "roll": "22991A0433",
+        "branch": "ECE",
+        "year": "4",
+        "registered_at": "2025-08-22 18:35:02"
+    },
+    {
+        "name": "SUMA LATHA",
+        "roll": "22991A4211",
+        "branch": "AIML",
+        "year": "4",
+        "registered_at": "2025-08-22 18:37:04"
+    },
+    {
+        "name": "TANUJHA",
+        "roll": "22991A4207",
+        "branch": "AIML",
+        "year": "4",
+        "registered_at": "2025-08-22 19:15:40"
+    },
+    {
+        "name": "SHANNU",
+        "roll": "22991A4215",
+        "branch": "AIML",
+        "year": "4",
+        "registered_at": "2025-08-22 19:31:41"
+    },
+    {
+        "name": "PAVANI",
+        "roll": "22991A4201",
+        "branch": "AIML",
+        "year": "4",
+        "registered_at": "2025-08-23 11:53:08"
+    },
+    {
+        "name": "SATHVIKA",
+        "roll": "22991A4203",
+        "branch": "AIML",
+        "year": "4",
+        "registered_at": "2025-08-23 17:29:59"
     }
 ]
