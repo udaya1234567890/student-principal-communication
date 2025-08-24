@@ -1,15 +1,14 @@
-from fastapi import FastAPI, Form, HTTPException, Query
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Form, Request, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+import os, json, hashlib
 from datetime import datetime
-import json
-import os
-import hashlib
 
-app = FastAPI(title="Principal-Student Communication App")
+app = FastAPI(title="Student-Principal Communication App")
 
-# ---------------- CORS ----------------
+# ------------------- CORS -------------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,10 +16,11 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# ---------------- Serve Static Files ----------------
+# ------------------- Static & Templates -------------------
 app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
 
-# ---------------- File Paths ----------------
+# ------------------- Data Files -------------------
 DATA_DIR = "data"
 STUDENT_FILE = os.path.join(DATA_DIR, "students.json")
 PRINCIPAL_FILE = os.path.join(DATA_DIR, "principals.json")
@@ -29,13 +29,13 @@ EVENT_FILE = os.path.join(DATA_DIR, "events.json")
 EMERGENCY_FILE = os.path.join(DATA_DIR, "emergencies.json")
 os.makedirs(DATA_DIR, exist_ok=True)
 
-# ---------------- Utility Functions ----------------
+# ------------------- Utility Functions -------------------
 def load_data(file_path):
     if os.path.exists(file_path):
         try:
             with open(file_path, "r", encoding="utf-8") as f:
                 return json.load(f)
-        except json.JSONDecodeError:
+        except:
             return []
     return []
 
@@ -43,18 +43,12 @@ def save_data(file_path, data):
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
 
-def get_new_id(data):
-    return max((item.get("id", 0) for item in data), default=0) + 1
-
 def hash_password(password: str):
     return hashlib.sha256(password.encode()).hexdigest()
 
 def verify_principal(username: str, password: str):
     hashed = hash_password(password)
-    return any(
-        p["username"] == username and p["password"] == hashed
-        for p in load_data(PRINCIPAL_FILE)
-    )
+    return any(p["username"] == username and p["password"] == hashed for p in load_data(PRINCIPAL_FILE))
 
 def get_student_by_roll(roll: str):
     for s in load_data(STUDENT_FILE):
@@ -62,7 +56,47 @@ def get_student_by_roll(roll: str):
             return s
     return None
 
-# ---------------- Student & Principal ----------------
+def get_new_id(data):
+    return max((item.get("id", 0) for item in data), default=0) + 1
+
+# ------------------- Pages -------------------
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/register_student_page", response_class=HTMLResponse)
+def register_student_page(request: Request):
+    return templates.TemplateResponse("register_student.html", {"request": request})
+
+@app.get("/request", response_class=HTMLResponse)
+def request_page(request: Request):
+    return templates.TemplateResponse("request.html", {"request": request})
+
+@app.get("/view_requests_page", response_class=HTMLResponse)
+def view_requests_page(request: Request):
+    return templates.TemplateResponse("view_requests.html", {"request": request})
+
+@app.get("/admin_dashboard", response_class=HTMLResponse)
+def admin_dashboard(request: Request):
+    return templates.TemplateResponse("admin_dashboard.html", {"request": request})
+
+@app.get("/event_request", response_class=HTMLResponse)
+def event_request_page(request: Request):
+    return templates.TemplateResponse("event_request.html", {"request": request})
+
+@app.get("/view_event_status_page", response_class=HTMLResponse)
+def view_event_status_page(request: Request):
+    return templates.TemplateResponse("view_event_status.html", {"request": request})
+
+@app.get("/emergency_request", response_class=HTMLResponse)
+def emergency_request_page(request: Request):
+    return templates.TemplateResponse("emergency_request.html", {"request": request})
+
+@app.get("/view_emergency_status_page", response_class=HTMLResponse)
+def view_emergency_status_page(request: Request):
+    return templates.TemplateResponse("view_emergency_status.html", {"request": request})
+
+# ------------------- Student & Principal -------------------
 @app.post("/register_student")
 def register_student(
     name: str = Form(...),
@@ -113,7 +147,27 @@ def delete_student(roll: str):
     save_data(STUDENT_FILE, updated)
     return {"message": "Student deleted successfully"}
 
-# ---------------- Leave Requests ----------------
+# -------- NEW: Update student --------
+@app.post("/update_student")
+def update_student(roll: str = Form(...), new_name: str = Form(...)):
+    students = load_data(STUDENT_FILE)
+    found = False
+    for s in students:
+        if s["roll"] == roll:
+            s["name"] = new_name
+            found = True
+    if not found:
+        raise HTTPException(status_code=404, detail="Student not found")
+    save_data(STUDENT_FILE, students)
+    return {"message": "Student updated successfully"}
+
+# -------- NEW: Dashboard page --------
+@app.get("/dashboard", response_class=HTMLResponse)
+def get_dashboard(request: Request):
+    students = load_data(STUDENT_FILE)
+    return templates.TemplateResponse("dashboard.html", {"request": request, "students": students})
+
+# ------------------- Leave Requests -------------------
 @app.post("/request_permission")
 def request_permission(
     roll: str = Form(...), reason: str = Form(...),
@@ -170,7 +224,7 @@ def view_requests(
         return [r for r in load_data(REQUEST_FILE) if r["roll"] == roll]
     raise HTTPException(status_code=400, detail="Invalid role")
 
-# ---------------- Event Requests ----------------
+# ------------------- Event Requests -------------------
 @app.post("/submit_event")
 def submit_event(
     title: str = Form(...), date: str = Form(...), location: str = Form(...),
@@ -210,7 +264,6 @@ def update_event(
 ):
     if not verify_principal(principalusername, principalpassword):
         raise HTTPException(status_code=401, detail="Unauthorized")
-
     events = load_data(EVENT_FILE)
     for e in events:
         if e["id"] == eventId:
@@ -221,7 +274,6 @@ def update_event(
             e["status"] = status
             save_data(EVENT_FILE, events)
             return {"message": "Event updated successfully", "event": e}
-
     raise HTTPException(status_code=404, detail="Event not found")
 
 @app.post("/delete_event")
@@ -232,18 +284,15 @@ def delete_event(
 ):
     if not verify_principal(principalusername, principalpassword):
         raise HTTPException(status_code=401, detail="Unauthorized")
-
     events = load_data(EVENT_FILE)
     updated_events = [e for e in events if e["id"] != eventId]
-
     if len(updated_events) == len(events):
         raise HTTPException(status_code=404, detail="Event not found")
-
     save_data(EVENT_FILE, updated_events)
     return {"message": "Event deleted successfully"}
 
 @app.get("/get_event_requests")
-def get_event_requests(username: str = Query(...), password: str = Query(...)):
+def get_event_requests(username: str, password: str):
     if not verify_principal(username, password):
         raise HTTPException(status_code=401, detail="Unauthorized")
     return load_data(EVENT_FILE)
@@ -252,7 +301,7 @@ def get_event_requests(username: str = Query(...), password: str = Query(...)):
 def view_events_by_roll(roll: str = Form(...)):
     return [e for e in load_data(EVENT_FILE) if e["roll"] == roll]
 
-# ---------------- Emergency Requests ----------------
+# ------------------- Emergency Requests -------------------
 @app.post("/submit_emergency")
 def submit_emergency(
     roll: str = Form(...), emergency_type: str = Form(...), description: str = Form(...)
@@ -300,86 +349,3 @@ def update_emergency_status(
 @app.post("/view_emergency_by_roll")
 def view_emergency_by_roll(roll: str = Form(...)):
     return [e for e in load_data(EMERGENCY_FILE) if e["roll"] == roll]
-
-# ---------------- Serve HTML Pages ----------------
-def serve_html(file_path: str):
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            return HTMLResponse(content=f.read(), status_code=200)
-    except FileNotFoundError:
-        return HTMLResponse(content=f"{file_path} not found", status_code=404)
-
-# ---------------- Home Page with Centered Welcome Message ----------------
-
-@app.get("/", response_class=HTMLResponse)
-def home():
-    html_content = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Principal-Student Communication App</title>
-        <!-- Google Font -->
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap" rel="stylesheet">
-        <style>
-            body {
-                height: 100vh;
-                margin: 0;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                background: linear-gradient(135deg, #74ebd5, #ACB6E5); /* gradient background */
-                font-family: 'Poppins', sans-serif;
-            }
-            h1 {
-                font-size: 60px;
-                color: black;
-                text-align: center;
-                text-shadow: 3px 3px 10px rgba(0,0,0,0.3);
-                animation: fadeIn 2s ease-in-out;
-            }
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(-20px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Welcome To Principal-Student Communication App</h1>
-    </body>
-    </html>
-    """
-    return HTMLResponse(content=html_content)
-
-
-# ---------------- Other HTML Pages ----------------
-@app.get("/request", response_class=HTMLResponse)
-def request_page():
-    return serve_html("request.html")
-
-@app.get("/admin_dashboard", response_class=HTMLResponse)
-def admin_dashboard():
-    return serve_html("admin_dashboard.html")
-
-@app.get("/view_requests_page", response_class=HTMLResponse)
-def view_requests_page():
-    return serve_html("view_requests.html")
-
-@app.get("/event_request", response_class=HTMLResponse)
-def event_request_page():
-    return serve_html("event_request.html")
-
-@app.get("/view_event_status", response_class=HTMLResponse)
-def view_event_status_page():
-    return serve_html("view_event_status.html")
-
-@app.get("/register_student_page", response_class=HTMLResponse)
-def register_student_page():
-    return serve_html("register_student.html")
-
-@app.get("/emergency_request", response_class=HTMLResponse)
-def emergency_request_page():
-    return serve_html("emergency_request.html")
-
-@app.get("/view_emergency_status", response_class=HTMLResponse)
-def view_emergency_status_page():
-    return serve_html("view_emergency_status.html")
