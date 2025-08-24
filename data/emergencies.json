@@ -10,5 +10,29 @@
         "status": "Rejected",
         "response": "ok go ",
         "timestamp": "2025-08-19 12:25:19"
+    },
+    {
+        "id": 2,
+        "name": "SHANNU",
+        "roll": "22991A4215",
+        "branch": "AIML",
+        "year": "4",
+        "emergency_type": "Injury",
+        "description": "HEAVY BLOOD FLOW",
+        "status": "Approved",
+        "response": "ok",
+        "timestamp": "2025-08-22 19:35:12"
+    },
+    {
+        "id": 3,
+        "name": "PAVANI",
+        "roll": "22991A4201",
+        "branch": "AIML",
+        "year": "4",
+        "emergency_type": "Medical",
+        "description": "HSDHCS",
+        "status": "Pending",
+        "response": "",
+        "timestamp": "2025-08-23 11:56:33"
     }
 ]
